@@ -153,7 +153,7 @@ nano settings.js
 
 ---
 
-## 👑 𝐂𝐫𝐞𝐚𝐝𝐨𝐫 𝐝𝐞 mᥲríᥲ k᥆ȷᥙ᥆
+## 👑 𝐂𝐫𝐞𝐚𝐝𝐨𝐫 𝐝𝐞 𝐀𝐥𝐚𝐬𝐭𝐨𝐫-𝐛𝐨𝐭
 
 
 <a href="https://github.com/Emmax08"><img src="https://github.com/Emmax08.png" width="250" height="250" alt="Emmax"/></a>
