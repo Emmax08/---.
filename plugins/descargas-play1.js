@@ -9,8 +9,8 @@ import fs from 'fs';
 
 const SIZE_LIMIT_MB = 100;
 const MIN_AUDIO_SIZE_BYTES = 50000;
-const newsletterJid = '120363401893800327@newsletter';
-const newsletterName = '⸙ְ̻࠭ꪆ👑 mᥲríᥲ k᥆ȷᥙ᥆ 𖥔 Sᥱrvice';
+const newsletterJid = '120363422454443738@newsletter';
+const newsletterName = '⸙ְ̻࠭ꪆ😈 𝐀𝐋𝐀𝐒𝐓𝐎𝐑 𖥔 Sᥱrvice';
 
 const handler = async (m, { conn, args, usedPrefix, command }) => {
   const name = conn.getName(m.sender);
@@ -26,7 +26,7 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
       serverMessageId: -1
     },
     externalAdReply: {
-      title: '🖤 ⏤͟͟͞͞mᥲríᥲ k᥆ȷᥙ᥆ ᨶ႒ᩚ',
+      title: '🖤 ⏤͟͟͞͞𝐀𝐋𝐀𝐒𝐓𝐎𝐑 ᨶ႒ᩚ',
       body: `✦ 𝙀𝙨𝙥𝙚𝙧𝙖𝙣𝙙𝙤 𝙩𝙪 𝙨𝙤𝙡𝙞𝙘𝙞𝙩𝙪𝙙, ${name}. ♡~٩( ˃▽˂ )۶~♡`,
       thumbnail: icons,
       sourceUrl: redes,
