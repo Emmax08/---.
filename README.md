@@ -1,5 +1,5 @@
 
-<h1 align="center">🪽--mᥲríᥲ k᥆ȷᥙ᥆ Bot MD--🍂</h1>
+<h1 align="center">😈-- 𝐀𝐥𝐚𝐬𝐭𝐨𝐫-𝐛𝐨𝐭 MD--🍂</h1>
 
 <p align="center">
   <imgq src="/qmain/xd/ezgif.com-video-to-gif-converter.gif?raw=true" alt="mᥲríᥲ k᥆ȷᥙ᥆ MD Preview" />
@@ -13,7 +13,7 @@
   <summary><b>☁️ 𝐀𝐜𝐥𝐚𝐫𝐚𝐜𝐢o𝐧 𝐥𝐞𝐠𝐚𝐥</b></summary>
 
 > 🚫 **Este proyecto NO está afiliado a WhatsApp ni WhatsApp LLC.**  
-> un bot hecho 100% independiente, la base del bot es de Yuki Suou. bot personalizado por **nevi-dev**.
+> un bot hecho 100% independiente, la base del bot es de maria kojou . bot personalizado por **Emmax-rtx**.
 </details>
 
 ---
