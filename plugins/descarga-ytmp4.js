@@ -1,8 +1,8 @@
 import fetch from 'node-fetch';
 
 // --- Constantes de Configuración ---
-const newsletterJid = '120363401893800327@newsletter';
-const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡ mᥲríᥲ k᥆ȷᥙ᥆\'s 𝐒ervice';
+const newsletterJid = '120363422454443738@newsletter';
+const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡ 𝐀𝐋𝐀𝐒𝐓𝐎𝐑\'s 𝐒ervice';
 const emoji = '🎵';
 
 // --- Configuración de la Nueva API (XFARR) ---
