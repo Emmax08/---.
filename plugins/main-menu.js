@@ -11,16 +11,16 @@ const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
 // --- Configuración del Bot y Estilo ---
-const newsletterJid = '120363401893800327@newsletter';
-const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡ mᥲríᥲ k᥆ȷᥙ᥆\'s 𝐒ervice';
-const packname = '˚mᥲríᥲ k᥆ȷᥙ᥆-bot';
+const newsletterJid = '120363422454443738@newsletter';
+const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡ 𝐀𝐥𝐚𝐬𝐭𝐨𝐫\'s 𝐒ervice';
+const packname = '˚𝐀𝐥𝐚𝐬𝐭𝐨𝐫-bot';
 
 const GITHUB_REPO_OWNER = 'Emmax08';
 const GITHUB_REPO_NAME = '-';
 const GITHUB_BRANCH = 'main';
 
 // 🌐 VARIABLE GLOBAL DE REDES 🌐
-const redes = 'https://whatsapp.com/channel/0029Vb60E6xLo4hbOoM0NG3D';
+const redes = 'https://whatsapp.com/channel/0029VbBw362A2pL9BOnpbP0H';
 
 // --- Definición de Categorías y Mapeo de Tags (USADO PARA GENERAR LA LISTA) ---
 const CATEGORIES = {
@@ -137,7 +137,7 @@ let handler = async (m, { conn, usedPrefix, args, __dirname }) => {
     // 4. Encabezado del Menú (Datos de Gata integrados)
     const encabezado = `
 *╭┈┈┈┈┈┈┈┈┈୨୧┈┈┈┈┈┈┈┈┈╮*
-*│ 👑 | 𝐌𝐀𝐑𝐈𝐀 𝐊𝐎𝐉𝐔𝐎 𝐁𝐎𝐓 | 🪽*
+*│ 😈 |𝐀𝐋𝐀𝐒𝐓𝐎𝐑 𝐁𝐎𝐓 | 🖤*
 *╰┈┈┈┈┈┈┈┈┈୨୧┈┈┈┈┈┈┈┈┈╯*
 ⎔ \`\`\`${horarioFecha}\`\`\`
 *├┈───────┈─┈──┈─┈──┈─┈*
@@ -168,7 +168,7 @@ let handler = async (m, { conn, usedPrefix, args, __dirname }) => {
         },
         externalAdReply: {
             title: packname,
-            body: '👑 Menú de Comandos | mᥲríᥲ k᥆ȷᥙ᥆-Bot 🪽',
+            body: '🌪 Menú de Comandos | 𝐀𝐥𝐚𝐬𝐭𝐨𝐫-𝐛𝐨𝐭 ⚡️',
             thumbnailUrl: miniaturaRandom,
             sourceUrl: redes,
             mediaType: 1,
