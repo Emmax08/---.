@@ -78,14 +78,14 @@ ${chat.sRules || `1. Respetar a todos los miembros
         .replace(/{miembros}/g, `${groupSize}`)
     
     const caption = `
-╭───·˚ 🐝 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 🐝 ·˚───╮
+╭───·˚ 😈 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 😈 ·˚───╮
 
   𐔌՞. .՞𐦯 ¡Hola, ${username}  
   Te damos la bienvenida a: *${groupMetadata.subject}*
 
 ${mensaje}
 
-╰──·˚ 🌷 ¡Disfruta tu estadía! ˚·──╯`
+╰──·˚ ✡️ ¡Disfruta tu estadía! ˚·──╯`
 
     return { 
         imageUrl: apiUrl, 
@@ -135,14 +135,14 @@ async function generarDespedida({ conn, userId, groupMetadata, chat }) {
         .replace(/{fechaSalida}/g, `${fecha}`)
     
     const caption = `
-╭───·˚ 🐝 𝐆𝐎𝐎𝐃 𝐁𝐘𝐄 🐝 ·˚───╮
+╭───·˚ 👿 𝐆𝐎𝐎𝐃 𝐁𝐘𝐄 👿 ·˚───╮
 
   𐔌՞. .՞𐦯 – ${username}  
   Se fue de: *${groupMetadata.subject}*
 
 ${mensaje}
 
-╰───·˚  🌷 ¡Hasta pronto!  ˚·───╯`
+╰───·˚  🥀 ¡Hasta pronto!  ˚·───╯`
 
     return { 
         imageUrl: apiUrl, 
