@@ -44,13 +44,13 @@ let handler = async function (m, { conn, text }) {
 •┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄•
 ${global.packname || ''}`
 
-  const imagenRegistro = 'https://files.catbox.moe/qwrn19.jpg'
+  const imagenRegistro = 'https://files.catbox.moe/qc75v7.jpg'
 
   await conn.sendMessage(m.chat, {
     text: '⊱『✅ 𝗥𝗘𝗚𝗜𝗦𝗧𝗥𝗔𝗗𝗢(𝗔) ✅』⊰\n\n' + regbot,
     contextInfo: {
       externalAdReply: {
-        title: 'Maria Kujou Bot',
+        title: '𝐀𝐋𝐀𝐒𝐓𝐎𝐑 Bot',
         body: 'Registro exitoso',
         thumbnailUrl: imagenRegistro,
         sourceUrl: global.redes || 'https://github.com/Dioneibi-rip',
