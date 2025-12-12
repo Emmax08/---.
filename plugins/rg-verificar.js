@@ -7,7 +7,7 @@ let handler = async function (m, { conn, text }) {
   let name2 = conn.getName(m.sender)
 
   if (user.registered === true) throw `*『✦』Ya estás registrado. Para volver a registrarte usa: #unreg*`
-  if (!Reg.test(text)) throw `*『✦』Formato incorrecto.*\nUsa:\n#reg Nombre.edad\n\nEjemplo:\n#reg Masha.18`
+  if (!Reg.test(text)) throw `*『✦』Formato incorrecto.*\nUsa:\n#reg Nombre.edad\n\nEjemplo:\n#reg 𝐀𝐋𝐀𝐒𝐓𝐎𝐑.18`
 
   let [_, name, splitter, age] = text.match(Reg)
   if (!name) throw '*『✦』El nombre es obligatorio.*'
