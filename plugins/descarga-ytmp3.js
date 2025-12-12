@@ -28,7 +28,7 @@ var handler = async (m, { conn, args, usedPrefix, command }) => {
             serverMessageId: -1
         },
         externalAdReply: {
-            title: 'mᥲríᥲ k᥆ȷᥙ᥆: Pista localizada. 👑',
+            title: '𝐀𝐋𝐀𝐒𝐓𝐎𝐑: Alma localizada. 😈',
             body: `Procesando solicitud para el/la Proxy ${name}...`,
             thumbnail: global.icono, // Asegúrate de que 'global.icono' esté definido
             sourceUrl: global.redes, // Asegúrate de que 'global.redes' esté definido
