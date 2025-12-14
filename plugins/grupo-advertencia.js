@@ -29,7 +29,7 @@ return
   );
   if (user.warn >= 3) {
     user.warn = 0;
-    await m.reply(`${emoji} Te lo adverti varias veces!!!.\n*@${who.split`@`[0]}* Superaste las *3* advertencias, ahora seras eliminado/a.`, null, { mentions: [who] },
+    await m.reply(`${emoji} Te lo adverti varias veces!!!.\n*@${who.split`@`[0]}* Superaste las *3* advertencias, ahora seras desterrado/a.`, null, { mentions: [who] },
     );
     await conn.groupParticipantsUpdate(m.chat, [who], 'remove');
   }
