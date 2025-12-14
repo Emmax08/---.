@@ -149,7 +149,7 @@ let handler = async (m, { conn, usedPrefix, args, __dirname }) => {
 *│ 📊 I N F O R M A C I Ó N*
 *│* 📦 *Comandos:* ${totalComandos}
 *│* ⏱️ *Actividad:* ${tiempoActividad}
-*│* 👥 *Regis. Usuarios:* ${rtotalreg}/${totalRegistros}
+*│* 👥 *Regis. Almas:* ${rtotalreg}/${totalRegistros}
 *│* 🚫 *Chats Bloqueados:* ${totalChatsBanned}
 *│* 🚫 *Usuarios Bloqueados:* ${totalUsersBanned}
 *│* 👑 *Dueño:* Emmax
