@@ -32,17 +32,17 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
       if (m.text.includes(currentGroupLink)) return;
 
       if (isSenderAdmin) {
-        return m.reply(`✦ El antilink está activo pero te salvaste por ser admin.`);
+        return m.reply(`✦ El antilink está activo pero te salvaste por ser un pecador.`);
       }
 
       await conn.sendMessage(m.chat, {
-        text: `*「 ENLACE DETECTADO 」*\n\n《✧》${user} rompiste las reglas del grupo y serás eliminado del grupo por romper las reglas ...`,
+        text: `*「 ENLACE DETECTADO 」*\n\n《✧》${user} rompiste las reglas del grupo y serás desterrado del infierno por romper las reglas ...`,
         mentions: [m.sender]
       }, { quoted: m });
 
       if (!isBotAdmin) {
         return conn.sendMessage(m.chat, {
-          text: `✦ El antilink está activo pero no puedo eliminar a ${user} porque no soy admin.`,
+          text: `✦ El antilink está activo pero no puedo desterrar a ${user} porque no soy pecador .`,
           mentions: [...groupAdmins.map(v => v.id)]
         }, { quoted: m });
       }
