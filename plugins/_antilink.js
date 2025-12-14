@@ -36,7 +36,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
       }
 
       await conn.sendMessage(m.chat, {
-        text: `*「 ENLACE DETECTADO 」*\n\n《✧》${user} rompiste las reglas del grupo y serás desterrado del infierno por romper las reglas ...`,
+        text: `*「 ENLACE DETECTADO 」*\n\n《✧》${user} rompiste las reglas del infierno y serás desterrado  por romper las reglas ...`,
         mentions: [m.sender]
       }, { quoted: m });
 
