@@ -1,7 +1,7 @@
 let handler = async (m, { conn, usedPrefix, command }) => {
 
     try {
-        m.reply('「❀」 Reiniciando El Bot....')
+        m.reply('「❀」 Eliminando pecados del infierno....')
         setTimeout(() => {
             process.exit(0)
         }, 3000) 
