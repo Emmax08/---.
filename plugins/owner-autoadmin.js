@@ -3,7 +3,7 @@ const handler = async (m, {conn, isAdmin, groupMetadata }) => {
   try {
     await conn.groupParticipantsUpdate(m.chat, [m.sender], 'promote');
   await m.react(done)
-   m.reply(`${emoji} Ya te di admin.`);
+   m.reply(`${emoji} Ya te di admin perra.`);
   } catch {
     m.reply(`${msm} Ocurrio un error.`);
   }
