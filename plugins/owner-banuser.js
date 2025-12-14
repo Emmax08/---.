@@ -9,7 +9,7 @@ var handler = async (m, { conn, text, usedPrefix, command }) => {
         number = isNaN(text) ? text.split`@`[1] : text
         user = conn.user.jid.split`@`[0] + '@s.whatsapp.net'
         bot = conn.user.jid.split`@`[0]
-        bant = `❀ Por favor, etiqueta o escrive el número del usuario al que quieres banear del Bot.`
+        bant = `❀ Por favor, etiqueta o escrive el número del usuario al que quieres destarrar del infierno.`
         const nn = conn.getName(m.sender)
         if (!text && !m.quoted) return conn.reply(m.chat, bant, m, { mentions: [user] })
         
@@ -28,7 +28,7 @@ var handler = async (m, { conn, text, usedPrefix, command }) => {
             ownerNumber = global.owner[i][0]
             if (user.replace(/@s\.whatsapp\.net$/, '') === ownerNumber) {
                 aa = ownerNumber + '@s.whatsapp.net'
-                await conn.reply(m.chat, `✧ No puedo banear al propietario @${ownerNumber} de *${botname}*.`, m, { mentions: [aa] })
+                await conn.reply(m.chat, `✧ No puedo desterrar al pecado más fuerte  @${ownerNumber} de *${botname}*.`, m, { mentions: [aa] })
                 return
             }
         }
@@ -41,9 +41,9 @@ var handler = async (m, { conn, text, usedPrefix, command }) => {
 
         users[user].banned = true
         usr = m.sender.split('@')[0]
-        await conn.reply(m.chat, `❀ Usuario baneado con éxito.`, m, { mentions: [user] })
+        await conn.reply(m.chat, `❀ Usuario desterrado con éxito.`, m, { mentions: [user] })
         let nametag = conn.getName(user)
-        await conn.reply(`${suittag}@s.whatsapp.net`, `❀ El usuario *${nametag}* ha sido Baneado por *${nn}*.`, m)
+        await conn.reply(`${suittag}@s.whatsapp.net`, `❀ El usuario *${nametag}* ha sido desterrado por *${nn}*.`, m)
     } catch (e) {
         await conn.reply(m.chat, `⚠︎ Ocurrió un error.`, m)
     }
