@@ -25,7 +25,7 @@ return
 }}
 
   user.warn += 1;
-  await m.reply(`${user.warn == 1 ? `*@${who.split`@`[0]}*` : `*@${who.split`@`[0]}*`} Recibio una advertencia en este grupo!.\nMotivo: ${sdms}\n*Advertencias: ${user.warn}/3*`, null, { mentions: [who] },
+  await m.reply(`${user.warn == 1 ? `*@${who.split`@`[0]}*` : `*@${who.split`@`[0]}*`} Recibio una advertencia del pecado mas fuerte!.\nMotivo: ${sdms}\n*Advertencias: ${user.warn}/3*`, null, { mentions: [who] },
   );
   if (user.warn >= 3) {
     user.warn = 0;
