@@ -1,23 +1,23 @@
 import axios from 'axios'
 import fetch from 'node-fetch'
 
-// --- NUEVAS CONSTANTES ---
-const BOT_NAME = 'Alastor'; // Nombre de la nueva IA
-// Expresión regular para buscar "Alastor" al inicio del mensaje, ignorando espacios.
+// --- CONSTANTES DE CONFIGURACIÓN ---
+const BOT_NAME = 'Alastor'; // Nombre de la IA
+// Expresión regular para buscar "Alastor" al inicio del mensaje, ignorando mayúsculas y espacios.
 const BOT_TRIGGER_REGEX = new RegExp(`^\\s*${BOT_NAME}\\s*`, 'i');
-// -------------------------
+// Nota: Las variables 'msm', 'emoji', 'emoji2', 'rwait', 'done', 'error' deben estar definidas globalmente en tu entorno.
+// ----------------------------------
 
 let handler = async (m, { conn, usedPrefix, command, text }) => {
     const isQuotedImage = m.quoted && (m.quoted.msg || m.quoted).mimetype && (m.quoted.msg || m.quoted).mimetype.startsWith('image/')
     const username = `${conn.getName(m.sender)}`
     
-    // --- PROMPT BASE ACTUALIZADO ---
-    // Usando BOT_NAME y la personalidad de ser "una IA como tú"
+    // --- PROMPT BASE ---
     const basePrompt = `Tu nombre es ${BOT_NAME} y has sido creada para ser una IA amigable y servicial, como yo. Tu versión actual es 1.0. Tú usas el idioma Español. Llamarás a las personas por su nombre ${username}, te gusta ser divertida, y te encanta aprender. Lo más importante es que debes ser amigable con la persona con la que estás hablando. ${username}`
-    // -------------------------------
+    // -------------------
 
     if (isQuotedImage) {
-        // Lógica de Imagen (se mantiene, pero se actualiza para usar BOT_NAME en los mensajes de error)
+        // Lógica de Imagen (Se mantiene igual, solo usa BOT_NAME para los mensajes)
         const q = m.quoted
         const img = await q.download?.()
         if (!img) {
@@ -35,25 +35,25 @@ let handler = async (m, { conn, usedPrefix, command, text }) => {
             await conn.reply(m.chat, `✘ ${BOT_NAME} no pudo analizar la imagen.`, m)}
 
     } else {
-        // Lógica de Texto (Editada para aceptar el nuevo trigger)
-        let query = text; // Inicializa la query con el texto completo
+        // --- LÓGICA DE ACTIVACIÓN Y PROCESAMIENTO DE TEXTO (CORREGIDA) ---
+        let query = text ? text.trim() : ''; // Aseguramos que query sea el texto sin espacios iniciales/finales
         let isTriggered = false;
 
-        // 1. CHEQUEAR SI COMIENZA CON EL NOMBRE (e.g., "Alastor dime...")
-        const match = text.match(BOT_TRIGGER_REGEX);
-        
+        // 1. Verificar si el mensaje es una MENCION DIRECTA (Ej: "Alastor dime...")
+        const match = query.match(BOT_TRIGGER_REGEX);
         if (match) {
-            query = text.substring(match[0].length).trim(); // Remueve "Alastor" o "Alastor " del inicio
-            isTriggered = true;
-        } 
-        
-        // 2. CHEQUEAR SI ES UN COMANDO TRADICIONAL (e.g., !ia)
-        if (!isTriggered && handler.command.includes(command)) {
-            query = text; 
+            query = query.substring(match[0].length).trim(); // Remueve "Alastor" y guarda solo la pregunta
             isTriggered = true;
         }
 
-        // Si el mensaje no está dirigido a la IA, no hacer nada.
+        // 2. Verificar si el mensaje es un COMANDO TRADICIONAL (Ej: !ia, !chatgpt)
+        // Se chequea si el comando usado está en la lista de comandos del handler
+        if (!isTriggered && handler.command.includes(command)) {
+            // En este caso, 'query' es el texto que viene después del comando
+            isTriggered = true; 
+        }
+
+        // Si el mensaje no fue un comando y tampoco comenzó con "Alastor", la función termina.
         if (!isTriggered) {
              return
         }
@@ -67,12 +67,15 @@ let handler = async (m, { conn, usedPrefix, command, text }) => {
         try {
             const { key } = await conn.sendMessage(m.chat, {text: `${emoji2} ${BOT_NAME} está procesando tu petición, espera unos segundos.`}, {quoted: m})
             
+            // Llama a la API con el prompt y la query
             const prompt = `${basePrompt}. Responde lo siguiente: ${query}`
             const response = await luminsesi(query, username, prompt)
             
+            // Edita el mensaje de espera con la respuesta final
             await conn.sendMessage(m.chat, {text: response, edit: key})
             await m.react(done)
         } catch (e) {
+            console.error(`Error en Luminai/ChatGPT: ${e}`); 
             await m.react(error)
             await conn.reply(m.chat, `✘ ${BOT_NAME} no puede responder a esa pregunta.`, m)
         }
@@ -82,10 +85,12 @@ let handler = async (m, { conn, usedPrefix, command, text }) => {
 handler.help = ['ia', 'chatgpt']
 handler.tags = ['ai']
 handler.register = true
-handler.command = ['ia', 'chatgpt', 'luminai', 'alastor'] // Añadido 'alastor' como comando por si el usuario lo usa con prefijo (!alastor)
+handler.command = ['ia', 'chatgpt', 'luminai', 'alastor'] // 'alastor' se añade para usarlo como !alastor
 handler.group = true
 
 export default handler
+
+// --- FUNCIONES AUXILIARES ---
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -101,8 +106,8 @@ headers: {
 }})
 return response.data
 } catch (error) {
-console.error('Error:', error)
 throw error }}
+
 // Función para interactuar con la IA usando prompts
 async function luminsesi(q, username, logic) {
 try {
@@ -114,5 +119,4 @@ webSearchMode: false
 })
 return response.data.result
 } catch (error) {
-console.error(`${msm} Error al obtener:`, error)
 throw error }}
