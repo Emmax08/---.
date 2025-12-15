@@ -157,7 +157,13 @@ handler.before = async function (m, { conn, groupMetadata }) {
     // 1. Verificar si es un evento Stub y de Grupo
     if (!m.messageStubType || !m.isGroup) return !0
     
-    // Inicializar global.db.data.chats si es necesario
+    // --- DIAGNÓSTICO: CONFIRMAR RECEPCIÓN DEL EVENTO ---
+    console.log('--- EVENTO DE GRUPO STUB DETECTADO ---')
+    console.log(`Tipo: ${WAMessageStubType[m.messageStubType]}`)
+    console.log(`ID de usuario involucrado: ${m.messageStubParameters[0]}`)
+    // ----------------------------------------------------
+
+    // Inicializar global.db.data.chats si es necesario para evitar errores
     global.db = global.db || {}
     global.db.data = global.db.data || {}
     global.db.data.chats = global.db.data.chats || {}
@@ -181,7 +187,6 @@ handler.before = async function (m, { conn, groupMetadata }) {
         })
         
         // --- ENVÍO DE IMAGEN/TEXTO (PASO 1) ---
-        // Se elimina el bloque 'try-catch' que enviaba el texto de respaldo
         try {
             await conn.sendMessage(m.chat, {
                 image: { url: imageUrl },
@@ -190,8 +195,8 @@ handler.before = async function (m, { conn, groupMetadata }) {
             }, { quoted: null })
             
         } catch (error) {
-            console.error('Error enviando bienvenida (Imagen/Texto):', error)
-            // Si la imagen falla, NO se envía solo el texto.
+            // Se registra el error sin enviar un mensaje de fallback
+            console.error('ERROR enviando bienvenida (Imagen/Texto). Revisar URL de Canvas/Avatar/Fondo:', error)
         }
         
         // --- ENVÍO DE AUDIO (PASO 2) ---
@@ -202,7 +207,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
                     mimetype: 'audio/mpeg'
                 }, { quoted: null })
             } catch (audioError) {
-                console.error('Error enviando audio de bienvenida:', audioError)
+                console.error('ERROR enviando audio de bienvenida. Revisar URL del MP3:', audioError)
             }
         }
     }
@@ -223,10 +228,11 @@ handler.before = async function (m, { conn, groupMetadata }) {
             mentions: mentions
         }
         
+        // --- ENVÍO DE IMAGEN/TEXTO (CON TRY/CATCH) ---
         try {
             await conn.sendMessage(m.chat, messageOptions, { quoted: null })
         } catch (error) {
-            console.error('Error enviando despedida (Imagen/Texto):', error)
+             console.error('ERROR enviando despedida (Imagen/Texto). Revisar URL de Canvas/Avatar/Fondo:', error)
         }
     }
 }
