@@ -5,7 +5,7 @@ const pp = await conn.profilePictureUrl(m.chat, 'image').catch(_ => icono)
 // en lugar de un argumento (e.g., args[0]).
 let isClose = {
     'open': 'not_announcement',  // Abierto (todos pueden escribir)
-    'abrir': 'not_announcement', 
+    'abrir': 'not_announcement',
     'close': 'announcement',     // Cerrado (solo admins pueden escribir)
     'cerrar': 'announcement',
 }[command] 
@@ -17,12 +17,12 @@ await conn.groupSettingUpdate(m.chat, isClose)
 
 if (isClose === 'not_announcement'){
     // Mensaje para cuando se abre
-    m.reply(`${emoji} *El grupo ha sido abierto. Ya pueden escribir todos los miembros.*`)
+    m.reply(`${emoji} *El infierno ha sido abierto. Ya pueden escribir todas las almas.*`)
 }
 
 if (isClose === 'announcement'){
     // Mensaje para cuando se cierra
-    m.reply(`${emoji2} *El grupo ha sido cerrado. Solos los admins pueden escribir.*`)
+    m.reply(`${emoji2} *El infierno ha sido cerrado. Solos los pecadores pueden escribir.*`)
 }}
 
 // Se actualizan las propiedades del handler para usar los nuevos comandos
