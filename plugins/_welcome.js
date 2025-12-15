@@ -102,7 +102,6 @@ async function generarDespedida({ conn, userId, groupMetadata, chat }) {
     // --- ESPACIOS PARA CONFIGURACIÓN DE MEDIOS ---
     const avatar = await conn.profilePictureUrl(userId, 'image').catch(() => 'https://raw.githubusercontent.com/speed3xz/Storage/refs/heads/main/Arlette-Bot/b75b29441bbd967deda4365441497221.jpg')
     const background = 'https://qu.ax/YrVNX.jpg' // URL de imagen de fondo para el canvas/card
-    // NOTA: El audio solo se configuró para bienvenida, aquí no se usa audioUrl
     // ---------------------------------------------
     
     const descripcion = `${username}`
@@ -152,17 +151,19 @@ ${mensaje}
 }
 
 // *** LÓGICA DE BIENVENIDA Y DESPEDIDA (EVENTOS STUB) ***
-let handler = {} // Se inicializa el objeto handler, pero se elimina el comando /setrules.
+let handler = {} 
 
 handler.before = async function (m, { conn, groupMetadata }) {
     // 1. Verificar si es un evento Stub y de Grupo
     if (!m.messageStubType || !m.isGroup) return !0
     
-    // Verifica si global.db.data.chats existe, si no, lo inicializa para evitar errores.
+    // Inicializar global.db.data.chats si es necesario
+    global.db = global.db || {}
+    global.db.data = global.db.data || {}
     global.db.data.chats = global.db.data.chats || {}
     if (!global.db.data.chats[m.chat]) global.db.data.chats[m.chat] = {}
     
-    // 2. Comprobación de Bot Primario (Opcional, si tu base de datos lo soporta)
+    // 2. Comprobación de Bot Primario (Opcional)
     const primaryBot = global.db.data.chats[m.chat]?.primaryBot
     if (primaryBot && conn.user.jid !== primaryBot) return !1
     
@@ -170,6 +171,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
     const userId = m.messageStubParameters[0]
 
     // 3. Lógica de Bienvenida (ADD)
+    // Orden: 1. Imagen/Texto (juntos), 2. Audio
     if (chat?.welcome && m.messageStubType === WAMessageStubType.GROUP_PARTICIPANT_ADD) {
         const { imageUrl, caption, mentions, audioUrl } = await generarBienvenida({ 
             conn, 
@@ -178,8 +180,9 @@ handler.before = async function (m, { conn, groupMetadata }) {
             chat 
         })
         
+        // --- ENVÍO DE IMAGEN/TEXTO (PASO 1) ---
+        // Se elimina el bloque 'try-catch' que enviaba el texto de respaldo
         try {
-            // Envío de Imagen/Texto
             await conn.sendMessage(m.chat, {
                 image: { url: imageUrl },
                 caption: caption,
@@ -187,15 +190,11 @@ handler.before = async function (m, { conn, groupMetadata }) {
             }, { quoted: null })
             
         } catch (error) {
-            console.error('Error enviando bienvenida (Imagen):', error)
-            // Respaldo: Envía solo el texto si la imagen falla
-            await conn.sendMessage(m.chat, {
-                text: caption,
-                mentions: mentions
-            }, { quoted: null })
+            console.error('Error enviando bienvenida (Imagen/Texto):', error)
+            // Si la imagen falla, NO se envía solo el texto.
         }
         
-        // Envío de Audio (manejo separado de errores)
+        // --- ENVÍO DE AUDIO (PASO 2) ---
         if (audioUrl) {
             try {
                 await conn.sendMessage(m.chat, {
@@ -209,6 +208,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
     }
     
     // 4. Lógica de Despedida (REMOVE/LEAVE)
+    // Orden: 1. Imagen/Texto (juntos)
     if (chat?.welcome && (m.messageStubType === WAMessageStubType.GROUP_PARTICIPANT_REMOVE || m.messageStubType === WAMessageStubType.GROUP_PARTICIPANT_LEAVE)) {
         const { imageUrl, caption, mentions } = await generarDespedida({ 
             conn, 
@@ -223,7 +223,11 @@ handler.before = async function (m, { conn, groupMetadata }) {
             mentions: mentions
         }
         
-        await conn.sendMessage(m.chat, messageOptions, { quoted: null })
+        try {
+            await conn.sendMessage(m.chat, messageOptions, { quoted: null })
+        } catch (error) {
+            console.error('Error enviando despedida (Imagen/Texto):', error)
+        }
     }
 }
 
