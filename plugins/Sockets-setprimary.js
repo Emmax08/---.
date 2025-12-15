@@ -15,7 +15,7 @@ const handler = async (m, { conn }) => {
   if (!who) return conn.reply(m.chat, `🖤 *Menciona al pecador que deseas colocar como el mas fuerte.*`, m)
   if (!subBots.includes(who)) return conn.reply(m.chat, `✡️ *Este es un pecador debil.*\n\nNo poseo la capacidad de designarlo como pecador mas fuerte.`, m, rcanal)
   if (chat.primaryBot === who) {
-    return conn.reply(m.chat, `👑 *@${who.split`@`[0]} ya es el guardián principal de este jardín.*`, m, { mentions: [who] });
+    return conn.reply(m.chat, `👑 *@${who.split`@`[0]} ya es el pecado mas fuerte del infierno.*`, m, { mentions: [who] });
   }
   try {
     chat.primaryBot = who
