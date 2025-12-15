@@ -46,7 +46,7 @@ async function generarBienvenida({ conn, userId, groupMetadata, chat }) {
     
     // --- ESPACIOS PARA CONFIGURACIÓN DE MEDIOS ---
     const avatar = await conn.profilePictureUrl(userId, 'image').catch(() => 'https://raw.githubusercontent.com/speed3xz/Storage/refs/heads/main/Arlette-Bot/b75b29441bbd967deda4365441497221.jpg')
-    const background = 'https://qu.ax/YrVNX.jpg' // URL de imagen de fondo para el canvas/card
+    const background = 'https://files.catbox.moe/rip3mf.jpg' // URL de imagen de fondo para el canvas/card
     const audioBienvenida = 'https://raw.githubusercontent.com/speed3xz/Storage/refs/heads/main/Arlette-Bot/welcome-audio.mp3' // URL del audio en MP3
     // ---------------------------------------------
     
