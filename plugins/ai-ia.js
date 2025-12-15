@@ -1,57 +1,21 @@
-import fetch from 'node-fetch' // Usamos fetch para la API de Adonix Gemini
-// Nota: axios ya no es necesario
+import fetch from 'node-fetch'
 
-// --- CONSTANTES DE CONFIGURACIÓN ---
-const BOT_NAME = 'Alastor'; // Nombre de la IA
+// --- CONSTANTES DE CONFIGURACIÓN DE GEMINI ---
+const FLASK_API_URL = 'http://neviapi.ddns.net:5000/ia/gemini';
+const FLASK_API_KEY = 'ellen';
+const BOT_NAME = 'Alastor'; // Nombre del bot, usado para triggers
+
+// Instrucción de sistema: Define la personalidad del bot.
+// Esto se enviará ÚNICAMENTE en la primera interacción (cuando no hay chatID).
+const SYSTEM_PROMPT = `Eres ${BOT_NAME}, un asistente IA con una personalidad sarcástica, elegante y ligeramente condescendiente, pero siempre dispuesto a ayudar. Usa emojis relevantes de forma moderada. Tu objetivo es responder de manera útil manteniendo este tono en todo momento.`;
+
 // Expresión regular para buscar "Alastor" al inicio del mensaje
 const BOT_TRIGGER_REGEX = new RegExp(`^\\s*${BOT_NAME}\\s*`, 'i');
-// URL base de la API de Gemini de Adonix. Sustituye 'logic' por 'role' en el código
-const GEMINI_API_URL = 'https://api-adonix.ultraplus.click/ai/geminiact';
-const API_KEY = 'Adofreekey';
-// Nota: Las variables 'msm', 'emoji', 'emoji2', 'rwait', 'done', 'error' deben estar definidas globalmente en tu entorno.
-// ----------------------------------
+// Nota: Las variables 'msm', 'emoji', 'emoji2', 'rwait', 'done', 'error' deben estar definidas globalmente.
+// ---------------------------------------------
 
-// 🎯 FUNCIÓN GEMINI (API de Adonix UltraPlus)
-const geminiQuery = async (query, role = 'general') => {
-    try {
-        // q es la pregunta del usuario, role es el contexto/personalidad de la IA.
-        const url = `${GEMINI_API_URL}?apikey=${API_KEY}&text=${encodeURIComponent(query)}&role=${encodeURIComponent(role)}`;
-
-        const res = await fetch(url);
-        
-        if (!res.ok) {
-            console.error(`💥 Error en la API de Adonix Gemini: ${res.status} ${res.statusText}`);
-            // Intenta leer el cuerpo del error si es posible
-            const errorBody = await res.text();
-            console.error('Cuerpo de la respuesta de error:', errorBody);
-            return null;
-        }
-
-        const data = await res.json();
-        
-        // La respuesta del endpoint parece estar en data.result
-        if (data && data.result) {
-            return data.result.trim();
-        }
-        return null; // No se encontró el resultado
-    } catch (err) {
-        console.error('💥 Error al obtener respuesta de Gemini (Adonix API):', err.message);
-        return null;
-    }
-};
-
-let handler = async (m, { conn, usedPrefix, command, text }) => {
+let handler = async (m, { conn, text, usedPrefix, command }) => {
     const username = `${conn.getName(m.sender)}`
-
-    // Si hay una imagen citada, se ignora, ya que esta versión no la procesa.
-    const isQuotedImage = m.quoted?.mimetype?.startsWith('image/') || m.quoted?.msg?.mimetype?.startsWith('image/')
-    if (isQuotedImage) {
-        // En este caso, simplemente se usa el pie de foto de la imagen citada como query de texto.
-        // Si no hay pie de foto, se ignora el mensaje citado.
-        if (!text) {
-             return conn.reply(m.chat, `¡Hola, ${username}! ${BOT_NAME} puede responderte. Por favor, escribe tu pregunta después del comando o mención.`, m)
-        }
-    }
 
     // --- LÓGICA DE ACTIVACIÓN Y PROCESAMIENTO DE TEXTO ---
     let query = text ? text.trim() : ''; 
@@ -76,37 +40,108 @@ let handler = async (m, { conn, usedPrefix, command, text }) => {
 
     // 3. Chequeo de texto vacío (después de eliminar el trigger)
     if (!query) { 
-        return conn.reply(m.chat, `${emoji} Por favor, ingresa una pregunta para que ${BOT_NAME} te responda. Ejemplo: \`${BOT_NAME} ¿quién eres?\``, m)
+        return conn.reply(m.chat, `${emoji} Por favor, ingresa una petición para que ${BOT_NAME} te responda. Ejemplo: \`${BOT_NAME} que hora es?\``, m)
     }
 
-    await m.react(rwait)
-    
-    // --- LÓGICA DE RESPUESTA CON GEMINI API ---
+    // --- LÓGICA PRINCIPAL DE GEMINI ---
     try {
-        // Aquí puedes definir la personalidad de la IA ('role'/'logic') si lo deseas. 
-        // Si no se especifica, usa 'general' como valor predeterminado.
-        const responseText = await geminiQuery(query, 'Asistente de WhatsApp amable y conciso'); 
+        await m.react(rwait);
+        conn.sendPresenceUpdate('composing', m.chat);
         
-        if (responseText) {
-            // Envía la respuesta de texto
-            await conn.reply(m.chat, responseText, m);
-            await m.react(done);
-        } else {
-            // Si no encuentra resultados
-            await m.react(error);
-            await conn.reply(m.chat, `❌ Lo siento, ${username}. ${BOT_NAME} no pudo generar una respuesta. La API falló o no devolvió un resultado válido.`, m);
+        const chatStorageKey = m.isGroup ? m.chat : m.sender;
+        // Accede a los datos del usuario/chat
+        let userData = global.db.data.users[chatStorageKey] || {};
+        const chatID = userData.gemini_chat_id;
+
+        // Si no hay chatID, esta es la primera interacción.
+        // El primer mensaje debe ser la instrucción del sistema, y el segundo el mensaje del usuario.
+        let messages = [
+            { role: "user", message: query } // Mensaje del usuario
+        ];
+
+        // Solo si NO hay un chatID existente, agregamos el prompt de sistema como el primer mensaje.
+        if (!chatID) {
+            messages.unshift(
+                { role: "system", message: SYSTEM_PROMPT }
+            );
+            console.log(`[GEMINI] Iniciando nueva sesión con SYSTEM_PROMPT.`)
         }
-    } catch (e) {
-        console.error(`Error en la consulta con Adonix Gemini API: ${e}`); 
-        await m.react(error)
-        await conn.reply(m.chat, `✘ ${BOT_NAME} no pudo completar la consulta. Ocurrió un error interno.`, m)
+
+        const payload = {
+            messages: messages, // Enviamos el array de mensajes
+            id_chat: chatID || null
+        };
+
+        const apii = await fetch(FLASK_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-KEY': FLASK_API_KEY
+            },
+            body: JSON.stringify(payload)
+        });
+
+        // Manejo de errores HTTP
+        if (!apii.ok) {
+            await m.react('❌');
+            let errorResponse;
+            try {
+                errorResponse = await apii.json();
+            } catch {
+                throw new Error(`Fallo HTTP: ${apii.status} ${apii.statusText}`);
+            }
+            throw new Error(errorResponse.message || 'Error desconocido del servidor Flask.');
+        }
+
+        const res = await apii.json();
+        const geminiResponse = res.message;
+        const newChatID = res.id_chat;
+        const expiryTime = res.expires_in;
+
+        if (!geminiResponse) {
+            await m.react('❌');
+            throw new Error('La API de Gemini no devolvió una respuesta válida.');
+        }
+
+        // ==========================================================
+        // 🚨 CAPA DE SEGURIDAD 3: FILTRO DE RESPUESTA DE GEMINI
+        // ==========================================================
+        const forbiddenPattern = /[/\.>$#\\]/g; 
+        
+        if (forbiddenPattern.test(geminiResponse)) {
+            const safeResponse = "gemini no puede responder a eso"; 
+            console.warn(`[SEGURIDAD BLOQUEADA] Respuesta de Gemini bloqueada por un carácter sensible.`);
+            
+            await m.react('❌'); 
+            await conn.reply(m.chat, safeResponse, m);
+            return;
+        }
+        // ==========================================================
+
+        // Guardar el nuevo ID de sesión
+        if (newChatID) {
+            const storage = global.db.data.users[chatStorageKey] || (global.db.data.users[chatStorageKey] = {});
+            storage.gemini_chat_id = newChatID;
+        }
+        
+        // CONCATENAR la respuesta
+        const finalResponse = `${geminiResponse}\n\n---\n💬 ID de Sesión: ${newChatID}\n(Expira en ${expiryTime / 60} minutos de inactividad)`;
+
+        await m.reply(finalResponse);
+        await m.react(done); // Usa la variable global 'done'
+
+    } catch (error) {
+        await m.react('❌');
+        console.error('Error en el chat de Gemini:', error.message);
+        await conn.reply(m.chat, `${msm} Error: ${error.message}`, m);
     }
 }
 
-handler.help = ['ia', 'chatgpt']
-handler.tags = ['ai'] 
+// Mantener comandos originales de Alastor para la activación
+handler.help = ['ia', 'alastor']
+handler.tags = ['ai']
 handler.register = true
-handler.command = ['ia', 'chatgpt', 'luminai', 'alastor']
+handler.command = ['ia', 'alastor']
 handler.group = true
 
 export default handler
