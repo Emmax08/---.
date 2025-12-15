@@ -19,7 +19,7 @@ const handler = async (m, { conn }) => {
   }
   try {
     chat.primaryBot = who
-    conn.reply(m.chat, `😈 *Ahora  @${who.split`@`[0]} es el pecador principal.*\n\nAhora mi esencia fluirá únicamente a través de esta flor elegida.`, m, { mentions: [who] })
+    conn.reply(m.chat, `😈 *Ahora  @${who.split`@`[0]} es el pecador principal.*\n\nAhora soy el mas fuerte pobres perras.`, m, { mentions: [who] })
   } catch (e) {
     conn.reply(m.chat, `👿 *He fallado al ser el pecado mas fuerte.*\n\nLa conexión con el infierno se ha interrumpido.`, m, rcanal)
   }
