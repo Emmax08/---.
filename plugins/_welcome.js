@@ -3,12 +3,19 @@
 import { WAMessageStubType } from '@whiskeysockets/baileys'
 import fetch from 'node-fetch' 
 
+// --- CONFIGURACIÓN DE LA NUEVA API NEVI ---
+const API_URL = 'http://neviapi.ddns.net:5000/welcome'; // Endpoint de la API NEVI
+const API_KEY = 'maria'; // Clave de la API solicitada
+// URLs de fallback y fondo, usando las del código original
+const DEFAULT_AVATAR_URL = 'https://raw.githubusercontent.com/speed3xz/Storage/refs/heads/main/Arlette-Bot/b75b29441bbd967deda4365441497221.jpg';
+const BACKGROUND_IMAGE_URL_WELCOME = 'https://files.catbox.moe/rip3mf.jpg'; // Fondo original de Bienvenida
+const BACKGROUND_IMAGE_URL_BYE = 'https://files.catbox.moe/rip3mf.jpg'; // Fondo original de Despedida
+// ------------------------------------------
+
 // --- FUNCIONES DE UTILIDAD ---
 
 /**
  * Calcula los días que un participante ha estado en el grupo.
- * @param {object} participant - Objeto de participante con propiedad 'date' (timestamp en segundos).
- * @returns {number} Número de días en el grupo (mínimo 1).
  */
 function calcularDiasEnGrupo(participant) {
     if (!participant || typeof participant.date !== 'number') return 1
@@ -21,8 +28,6 @@ function calcularDiasEnGrupo(participant) {
 
 /**
  * Obtiene la fecha de creación del grupo en formato legible (CDMX).
- * @param {object} groupMetadata - Metadatos del grupo.
- * @returns {string} Fecha de creación formateada.
  */
 function obtenerFechaCreacion(groupMetadata) {
     if (!groupMetadata.creation) return 'Fecha desconocida'
@@ -36,21 +41,44 @@ function obtenerFechaCreacion(groupMetadata) {
 }
 
 /**
- * Descarga la imagen de la URL y devuelve un Buffer.
+ * Genera la imagen de bienvenida/despedida haciendo una petición POST a la API de Nevi.
+ * Devuelve el Buffer de la imagen (Reemplaza a fetchImageBuffer y apiUrl).
  */
-async function fetchImageBuffer(url) {
+async function generateImageFromAPI(type, userName, groupName, memberCount, avatarUrl, backgroundUrl) {
+    const action = type === 'welcome' ? 'welcome' : 'bye';
+
+    const payload = {
+        username: userName.replace('@', ''), 
+        action: action,
+        group_name: groupName,
+        member_count: memberCount,
+        background_url: backgroundUrl, 
+        profile_url: avatarUrl
+    };
+
     try {
-        const response = await fetch(url)
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-KEY': API_KEY
+            },
+            body: JSON.stringify(payload)
+        });
+
         if (!response.ok) {
-            console.error(`ERROR al descargar la imagen de Canvas. Status: ${response.status}`)
-            return null
+            console.error(`ERROR en la respuesta de la API Nevi (Status: ${response.status}). Body: ${await response.text()}`);
+            return null;
         }
-        return await response.buffer()
-    } catch (error) {
-        console.error('ERROR al intentar obtener el Buffer de la imagen:', error)
-        return null
+
+        return await response.buffer(); 
+
+    } catch (e) {
+        console.error('Error al llamar a la API de Nevi:', e);
+        return null;
     }
 }
+
 
 // --- GENERACIÓN DE DATOS ---
 
@@ -61,13 +89,14 @@ async function generarBienvenida({ conn, userId, groupMetadata, chat }) {
     const username = `@${userId.split('@')[0]}`
 
     // --- ESPACIOS PARA CONFIGURACIÓN DE MEDIOS ---
-    const avatar = await conn.profilePictureUrl(userId, 'image').catch(() => 'https://raw.githubusercontent.com/speed3xz/Storage/refs/heads/main/Arlette-Bot/b75b29441bbd967deda4365441497221.jpg')
-    const background = 'https://files.catbox.moe/rip3mf.jpg' // URL de imagen de fondo para el canvas/card
+    const avatar = await conn.profilePictureUrl(userId, 'image').catch(() => DEFAULT_AVATAR_URL)
+    const background = BACKGROUND_IMAGE_URL_WELCOME // Usamos la URL para la API de Nevi
     const audioBienvenida = 'https://files.catbox.moe/t2e1zx.mp3'
     // ---------------------------------------------
 
-    const descripcion = `${username}`
-    const apiUrl = `https://api.siputzx.my.id/api/canvas/welcomev4?avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(background)}&description=${encodeURIComponent(descripcion)}`
+    // ⬅️ Ya no se necesita apiUrl, se pasa la data a la función POST
+    // const descripcion = `${username}`
+    // const apiUrl = `...` 
 
     const groupSize = groupMetadata.participants.length
     const fechaCreacion = obtenerFechaCreacion(groupMetadata)
@@ -98,7 +127,15 @@ ${mensaje}
 
 ╰──·˚ ✡️ ¡Disfruta tu estadía! ˚·──╯`
     
-    const imageBuffer = await fetchImageBuffer(apiUrl)
+    // ⬅️ Obtener Buffer mediante llamada POST a la API de Nevi
+    const imageBuffer = await generateImageFromAPI(
+        'welcome', 
+        username, 
+        groupMetadata.subject, 
+        groupSize, 
+        avatar, 
+        background
+    )
 
     return {
         imageBuffer, 
@@ -118,12 +155,13 @@ async function generarDespedida({ conn, userId, groupMetadata, chat }) {
     const diasEnGrupo = calcularDiasEnGrupo(participantInfo)
 
     // --- ESPACIOS PARA CONFIGURACIÓN DE MEDIOS ---
-    const avatar = await conn.profilePictureUrl(userId, 'image').catch(() => 'https://raw.githubusercontent.com/speed3xz/Storage/refs/heads/main/Arlette-Bot/b75b29441bbd967deda4365441497221.jpg')
-    const background = 'https://qu.ax/YrVNX.jpg' // URL de imagen de fondo para el canvas/card
+    const avatar = await conn.profilePictureUrl(userId, 'image').catch(() => DEFAULT_AVATAR_URL)
+    const background = BACKGROUND_IMAGE_URL_BYE // Usamos la URL para la API de Nevi
     // ---------------------------------------------
 
-    const descripcion = `${username}`
-    const apiUrl = `https://api.siputzx.my.id/api/canvas/goodbyev4?avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(background)}&description=${encodeURIComponent(descripcion)}`
+    // ⬅️ Ya no se necesita apiUrl, se pasa la data a la función POST
+    // const descripcion = `${username}`
+    // const apiUrl = `...`
 
     const fecha = new Date().toLocaleDateString("es-ES", {
         timeZone: "America/Mexico_City",
@@ -160,7 +198,15 @@ ${mensaje}
 
 ╰───·˚  ☠️ ¡Hasta pronto!  ˚·───╯`
     
-    const imageBuffer = await fetchImageBuffer(apiUrl)
+    // ⬅️ Obtener Buffer mediante llamada POST a la API de Nevi
+    const imageBuffer = await generateImageFromAPI(
+        'goodbye', 
+        username, 
+        groupMetadata.subject, 
+        groupSize, 
+        avatar, 
+        background
+    )
 
     return {
         imageBuffer,
@@ -171,7 +217,6 @@ ${mensaje}
 
 // *** LÓGICA DE BIENVENIDA Y DESPEDIDA (EVENTOS STUB) ***
 
-// ⬅️ Se cambia la estructura 'handler.before' por 'export async function before'
 export async function before(m, { conn, groupMetadata }) {
     // 1. Verificar si es un evento Stub y de Grupo
     if (!m.messageStubType || !m.isGroup) return !0
@@ -217,8 +262,8 @@ export async function before(m, { conn, groupMetadata }) {
                 await conn.sendMessage(m.chat, { text: caption, mentions: mentions }, { quoted: null })
             }
         } else {
-            // FALLBACK a mensaje de texto si la descarga de la imagen falla
-            console.warn('[WARNING] Fallo la descarga de la imagen de bienvenida. Enviando solo texto.')
+            // FALLBACK a mensaje de texto si la generación/descarga de la imagen falla
+            console.warn('[WARNING] Fallo la generación/descarga de la imagen de bienvenida (API Nevi). Enviando solo texto.')
             await conn.sendMessage(m.chat, { text: caption, mentions: mentions }, { quoted: null })
         }
 
@@ -254,16 +299,13 @@ export async function before(m, { conn, groupMetadata }) {
                 }, { quoted: null })
             } catch (error) {
                 console.error('ERROR enviando despedida (Imagen/Texto). Falló sendMessage con Buffer:', error)
-                 // Fallback a texto si el envío con Buffer falla
+                // Fallback a texto si el envío con Buffer falla
                 await conn.sendMessage(m.chat, { text: caption, mentions: mentions }, { quoted: null })
             }
         } else {
-            // FALLBACK a mensaje de texto si la descarga de la imagen falla
-            console.warn('[WARNING] Fallo la descarga de la imagen de despedida. Enviando solo texto.')
+            // FALLBACK a mensaje de texto si la generación/descarga de la imagen falla
+            console.warn('[WARNING] Fallo la generación/descarga de la imagen de despedida (API Nevi). Enviando solo texto.')
             await conn.sendMessage(m.chat, { text: caption, mentions: mentions }, { quoted: null })
         }
     }
 }
-
-// ⬅️ Se elimina: export { generarBienvenida, generarDespedida, calcularDiasEnGrupo, obtenerFechaCreacion }
-// ⬅️ Se elimina: export default handler
