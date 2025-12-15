@@ -11,7 +11,7 @@ var handler = async (m, { conn, participants, usedPrefix, command }) => {
     //const nn = conn.getName(m.sender);
 
     if (user === conn.user.jid) {
-        return conn.reply(m.chat, `${emoji2} No puedo eliminar el bot del grupo.`, m);
+        return conn.reply(m.chat, `${emoji2} No puedo eliminar al pecador.`, m);
     }
 
     if (user === ownerGroup) {
@@ -19,7 +19,7 @@ var handler = async (m, { conn, participants, usedPrefix, command }) => {
     }
 
     if (user === ownerBot) {
-        return conn.reply(m.chat, `${emoji2} No puedo eliminar al propietario del bot.`, m);
+        return conn.reply(m.chat, `${emoji2} No puedo eliminar a mi creador.`, m);
     }
 
     await conn.groupParticipantsUpdate(m.chat, [user], 'remove');
