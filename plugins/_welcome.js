@@ -47,7 +47,7 @@ async function generarBienvenida({ conn, userId, groupMetadata, chat }) {
     // --- ESPACIOS PARA CONFIGURACIÓN DE MEDIOS ---
     const avatar = await conn.profilePictureUrl(userId, 'image').catch(() => 'https://raw.githubusercontent.com/speed3xz/Storage/refs/heads/main/Arlette-Bot/b75b29441bbd967deda4365441497221.jpg')
     const background = 'https://files.catbox.moe/rip3mf.jpg' // URL de imagen de fondo para el canvas/card
-    const audioBienvenida = 'https://raw.githubusercontent.com/speed3xz/Storage/refs/heads/main/Arlette-Bot/welcome-audio.mp3' // URL del audio en MP3
+    const audioBienvenida = 'https://raw.githubusercontent.com/speed3xz/Storage/refs/heads/main/Arlette-Bot/welcome-audio.mp3' // https://youtu.be/sdnZrk3i3ak?si=6mMb7mgqu_2S5hW8
     // ---------------------------------------------
     
     const descripcion = `${username}`
@@ -73,14 +73,14 @@ ${desc}`
         .replace(/{miembros}/g, `${groupSize}`)
     
     const caption = `
-╭───·˚ 🐝 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 🐝 ·˚───╮
+╭───·˚ 👿 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 😈 ·˚───╮
 
   𐔌՞. .՞𐦯 ¡Hola, ${username}  
   Te damos la bienvenida a: *${groupMetadata.subject}*
 
 ${mensaje}
 
-╰──·˚ 🌷 ¡Disfruta tu estadía! ˚·──╯`
+╰──·˚ ✡️ ¡Disfruta tu estadía! ˚·──╯`
 
     return { 
         imageUrl: apiUrl, 
@@ -135,14 +135,14 @@ async function generarDespedida({ conn, userId, groupMetadata, chat }) {
         .replace(/{fechaSalida}/g, `${fecha}`)
     
     const caption = `
-╭───·˚ 🐝 𝐆𝐎𝐎𝐃 𝐁𝐘𝐄 🐝 ·˚───╮
+╭───·˚ 😈 𝐆𝐎𝐎𝐃 𝐁𝐘𝐄 👿 ·˚───╮
 
   𐔌՞. .՞𐦯 – ${username}  
   Se fue de: *${groupMetadata.subject}*
 
 ${mensaje}
 
-╰───·˚  🌷 ¡Hasta pronto!  ˚·───╯`
+╰───·˚  ☠️ ¡Hasta pronto!  ˚·───╯`
 
     return { 
         imageUrl: apiUrl, 
