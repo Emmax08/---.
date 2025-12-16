@@ -101,7 +101,7 @@ const roles = {
   '*🌟 Gobernante del infierno III 🌟*': 3000,
   '*🌟 Gobernante del infierno IV 🌟*': 4000,
   '*🌟 Gobernante del infierno V 🌟*': 5000,
-  '*👑 Rey del infierno  👑*': 10000
+  '*👑 Rey del infierno  👑*': 100000000000
 }
 
 let handler = m => m
