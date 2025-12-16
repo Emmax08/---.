@@ -1,14 +1,14 @@
 [
    {
       "id": "1",
-      "name": "Alastor",
-      "gender": "Hombre",
-      "value": "22000",
-      "source": "Hazbin hotel",
+      "name": "Aika Sano",
+      "gender": "Mujer",
+      "value": "2200",
+      "source": "Ane wa Yanmama Junyuu-chuu",
       "img": [
-         "https://files.catbox.moe/07uer6.png",
-         "https://files.catbox.moe/4rrjeb.png",
-         "https:/files.catbox.moe/fwwr6y.jpg"
+         "https://raw.githubusercontent.com/The-King-Destroy/Adiciones/main/Contenido/1742690379398.jpeg",
+         "https://raw.githubusercontent.com/The-King-Destroy/Adiciones/main/Contenido/1742690401622.jpeg",
+         "https://raw.githubusercontent.com/The-King-Destroy/Adiciones/main/Contenido/1742690416897.jpeg"
       ],
       "vid": [
          "https://files.catbox.moe/fyd68k.mp4",
