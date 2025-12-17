@@ -120,13 +120,13 @@ ${desc}`
     const caption = `
 ╭───·˚ 👿 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 😈 ·˚───╮
 
-  𐔌՞. .՞𐦯 ¡Hola, ${username}  
-  Te damos la bienvenida a: *${groupMetadata.subject}*
+  𐔌՞. .՞𐦯 ¡Hola, ${username}  
+  Te damos la bienvenida a: *${groupMetadata.subject}*
 
 ${mensaje}
 
 ╰──·˚ ✡️ ¡Disfruta tu estadía! ˚·──╯`
-    
+
     // ⬅️ Obtener Buffer mediante llamada POST a la API de Nevi
     const imageBuffer = await generateImageFromAPI(
         'welcome', 
@@ -157,6 +157,7 @@ async function generarDespedida({ conn, userId, groupMetadata, chat }) {
     // --- ESPACIOS PARA CONFIGURACIÓN DE MEDIOS ---
     const avatar = await conn.profilePictureUrl(userId, 'image').catch(() => DEFAULT_AVATAR_URL)
     const background = BACKGROUND_IMAGE_URL_BYE // Usamos la URL para la API de Nevi
+    const audioDespedida = 'https://files.catbox.moe/62lqs8.mp3' // ⬅️ NUEVO AUDIO DE DESPEDIDA
     // ---------------------------------------------
 
     // ⬅️ Ya no se necesita apiUrl, se pasa la data a la función POST
@@ -191,13 +192,13 @@ async function generarDespedida({ conn, userId, groupMetadata, chat }) {
     const caption = `
 ╭───·˚ 😈 𝐆𝐎𝐎𝐃 𝐁𝐘𝐄 👿 ·˚───╮
 
-  𐔌՞. .՞𐦯 – ${username}  
-  Se fue de: *${groupMetadata.subject}*
+  𐔌՞. .՞𐦯 – ${username}  
+  Se fue de: *${groupMetadata.subject}*
 
 ${mensaje}
 
-╰───·˚  ☠️ ¡Hasta pronto!  ˚·───╯`
-    
+╰───·˚  ☠️ ¡Hasta pronto!  ˚·───╯`
+
     // ⬅️ Obtener Buffer mediante llamada POST a la API de Nevi
     const imageBuffer = await generateImageFromAPI(
         'goodbye', 
@@ -211,7 +212,8 @@ ${mensaje}
     return {
         imageBuffer,
         caption,
-        mentions: [userId]
+        mentions: [userId],
+        audioUrl: audioDespedida // ⬅️ SE DEVUELVE LA URL DEL AUDIO
     }
 }
 
@@ -281,15 +283,16 @@ export async function before(m, { conn, groupMetadata }) {
     }
 
     // 4. Lógica de Despedida (REMOVE/LEAVE)
+    // ⬅️ ESTA CONDICIÓN YA CUBRE CUANDO ALGUIEN ES REMOVIDO (GROUP_PARTICIPANT_REMOVE)
     if (chat?.welcome && (m.messageStubType === WAMessageStubType.GROUP_PARTICIPANT_REMOVE || m.messageStubType === WAMessageStubType.GROUP_PARTICIPANT_LEAVE)) {
-        const { imageBuffer, caption, mentions } = await generarDespedida({
+        const { imageBuffer, caption, mentions, audioUrl } = await generarDespedida({ // ⬅️ MODIFICADO: Se añade audioUrl
             conn,
             userId,
             groupMetadata,
             chat
         })
 
-        // --- ENVÍO DE IMAGEN/TEXTO (CON TRY/CATCH Y FALLBACK) ---
+        // --- ENVÍO DE IMAGEN/TEXTO (PASO 1) CON FALLBACK ---
         if (imageBuffer) {
             try {
                 await conn.sendMessage(m.chat, {
@@ -306,6 +309,18 @@ export async function before(m, { conn, groupMetadata }) {
             // FALLBACK a mensaje de texto si la generación/descarga de la imagen falla
             console.warn('[WARNING] Fallo la generación/descarga de la imagen de despedida (API Nevi). Enviando solo texto.')
             await conn.sendMessage(m.chat, { text: caption, mentions: mentions }, { quoted: null })
+        }
+
+        // --- ENVÍO DE AUDIO (PASO 2) --- ⬅️ NUEVA LÓGICA PARA EL AUDIO DE DESPEDIDA
+        if (audioUrl) {
+            try {
+                await conn.sendMessage(m.chat, {
+                    audio: { url: audioUrl },
+                    mimetype: 'audio/mpeg'
+                }, { quoted: null })
+            } catch (audioError) {
+                console.error('ERROR enviando audio de despedida. Revisar URL del MP3:', audioError)
+            }
         }
     }
 }
