@@ -274,11 +274,15 @@ if (await manejarRespuestasStickers(this, m)) return;
                         if (name != 'owner-unbanuser.js' && user?.banned) return
                     }
                 }
-                let hl = _prefix 
+                let hl = _prefix
+                let adminMode = chat.modoadmin 
                 let adminMode = global.db.data.chats[m.chat].modoadmin
                 let mini = `${plugins.botAdmin || plugins.admin || plugins.group || plugins || noPrefix || hl || m.text.slice(0, 1) == hl || plugins.command}`
+                if (solocreador && !isOwner && !isROwner && mini) return
+             
                 if (adminMode && !isOwner && !isROwner && m.isGroup && !isAdmin && mini) return   
                 if (plugin.rowner && plugin.owner && !(isROwner || isOwner)) { fail('owner', m, this); continue }
+                
                 if (plugin.rowner && !isROwner) { fail('rowner', m, this); continue }
                 if (plugin.owner && !isOwner) { fail('owner', m, this); continue }
                 if (plugin.mods && !isMods) { fail('mods', m, this); continue }
