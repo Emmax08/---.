@@ -1,13 +1,12 @@
-let handler = async (m, { conn, isOwner, isROwner, text }) => {
+let handler = async (m, { conn, isOwner, isROwner, text, usedPrefix, command }) => {
   // 1. Verificación de permisos (Owner o ROwner)
   if (!(isOwner || isROwner)) return global.dfail('owner', m, conn)
 
   // 2. Identificar el contenido (mensaje respondido o texto nuevo)
   let q = m.quoted ? m.quoted : m
-  let mime = (q.msg || q).mimetype || ''
   
   if (!m.quoted && !text) {
-    return conn.reply(m.chat, `*《✦》Instrucciones de uso:*\n\n> ✐ Responde a un mensaje (foto, video, audio, texto) con el comando *${usedPrefix}bcgc*\n> ✐ O escribe el comando seguido del texto.`, m)
+    return conn.reply(m.chat, `*《✦》Instrucciones de uso:*\n\n> ✐ Responde a un mensaje (foto, video, audio, texto) con el comando *${usedPrefix}${command}*\n> ✐ O escribe el comando seguido del texto.`, m)
   }
 
   // 3. Obtener grupos y preparar lista
@@ -19,7 +18,7 @@ let handler = async (m, { conn, isOwner, isROwner, text }) => {
 
   // 4. Ciclo de envío con copyNForward (mantiene fotos/texto/formato)
   for (let i of anu) {
-    await new Promise((res) => setTimeout(res, 1500)) // Delay de 1.5s
+    await new Promise((res) => setTimeout(res, 1500)) // Delay de 1.5s para evitar ban
     try {
       await conn.copyNForward(i, q, true)
     } catch (e) {
@@ -28,9 +27,8 @@ let handler = async (m, { conn, isOwner, isROwner, text }) => {
   }
 
   // 5. Mensaje de éxito final
-  let total = anu.length
   let mensajeFinal = `✨ *D I F U S I Ó N  C O M P L E T A*\n\n` +
-                     `«✦» *Grupos alcanzados:* ${total}\n` +
+                     `«✦» *Grupos alcanzados:* ${anu.length}\n` +
                      `«✦» *Estado:* Finalizado con éxito ✅`
   
   conn.reply(m.chat, mensajeFinal, m)
