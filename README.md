@@ -139,8 +139,8 @@ nano settings.js
 <details>
   <summary><b>👥 Grupos Oficiales</b></summary>
 
-- 📢 [Canal Oficial]https://whatsapp.com/channel/0029Vb60E6xLo4hbOoM0NG3D)
-- 👑 [Comunidad Global](https://chat.whatsapp.com/KphhZNpXzFjK9WV47Ho0oa?mode=ac_t)
+- 📢 [Canal Oficial](https://whatsapp.com/channel/0029VbBw362A2pL9BOnpbP0H)
+- 👑 [Comunidad Global](https://chat.whatsapp.com/Itu4OFTwURkFM06QtTAsDf)
 
 </details>
 
