@@ -189,6 +189,18 @@ if (await manejarRespuestasStickers(this, m)) return;
         const isMods = isOwner || global.mods.map(v => v.replace(/[^0-9]/g, '')).includes(senderNum)
         const isPrems = isROwner || global.prems.map(v => v.replace(/[^0-9]/g, '')).includes(senderNum) || _user.premium == true
 
+// --- [ SISTEMA DE BLOQUEO JERÁRQUICO ] ---
+        
+        // 1. NIVEL GLOBAL: bot.globalapagado (Solo Owners)
+        if (global.db.data.settings[this.user.jid]?.globalapagado && !isOwner && !isROwner) {
+            return 
+        }
+
+        // 2. NIVEL OWNER LOCAL: chat.isBotLocked (Solo Owners)
+        if (m.isGroup && chat.isBotLocked && !isOwner && !isROwner) {
+            return
+        }
+        
         if (opts['queque'] && m.text && !(isMods || isPrems)) {
             let queque = this.msgqueque, time = 1000 * 5
             const previousID = queque[queque.length - 1]
