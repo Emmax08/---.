@@ -6,7 +6,6 @@ let handler = async (m, { conn, usedPrefix, args }) => {
     let userId = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : (m.quoted ? m.quoted.sender : m.sender)
     
     try {
-        // 1. Inicialización de Datos
         if (!global.db.data.users) global.db.data.users = {}
         if (!global.db.data.characters) global.db.data.characters = {}
         if (!global.db.data.users[userId]) global.db.data.users[userId] = {}
@@ -14,19 +13,16 @@ let handler = async (m, { conn, usedPrefix, args }) => {
         const user = global.db.data.users[userId]
         const currency = global.moneda || 'Coins'
         
-        // 2. Limpieza de números (Evita el bug de invisibilidad por números gigantes)
         const fNum = (num) => {
             if (num === Infinity || num >= 9007199254740991) return 'Máximo'
             return (num || 0).toLocaleString()
         }
 
-        // 3. Información Personal
         let name = await conn.getName(userId).catch(_ => userId.split('@')[0])
         const cumpleanos = user.birth || `Sin especificar (${usedPrefix}setbirth)`
         const genero = user.genre || 'Sin especificar'
         const description = user.description || 'Sin descripción'
         
-        // Manejo de Matrimonio
         const parejaId = user.marry || null
         let textoMatrimonio = ''
         if (parejaId) {
@@ -35,7 +31,6 @@ let handler = async (m, { conn, usedPrefix, args }) => {
             textoMatrimonio = `• ✧ ${prefijo}: *${parejaName}* (@${parejaId.split('@')[0]})\n`
         }
 
-        // 4. Progreso y Nivel
         const exp = user.exp || 0
         const nivel = user.level || 0
         const sorted = Object.entries(global.db.data.users).map(([k, v]) => ({ ...v, jid: k })).sort((a, b) => (b.level || 0) - (a.level || 0))
@@ -50,7 +45,6 @@ let handler = async (m, { conn, usedPrefix, args }) => {
             } catch { return 'No disponible' }
         })()
 
-        // 5. Economía y Harem
         const coin = user.coin || 0
         const bank = user.bank || 0
         const total = coin + bank
@@ -65,10 +59,13 @@ let handler = async (m, { conn, usedPrefix, args }) => {
         const favId = user.favorite
         const favLine = favId && global.db.data.characters?.[favId] ? `• ❀ Favorito: *${global.db.data.characters[favId].name || '???'}*\n` : ''
 
-        // 6. Imagen de Perfil
+        // Cálculo de tiempo Premium
+        let premiumTime = user.premiumTime || 0
+        let isPremium = user.premium || premiumTime > Date.now()
+        let premiumStatus = isPremium ? (premiumTime > 0 ? `✅ (${await formatTime(premiumTime - Date.now())})` : '✅ Permanente') : '❌'
+
         const pp = await conn.profilePictureUrl(userId, 'image').catch(_ => 'https://files.catbox.moe/xr2m6u.jpg')
 
-        // 7. Construcción del Mensaje
         const text = `
 \`P E R F I L  〤  U S U A R I O\`
 
@@ -89,11 +86,10 @@ ${textoMatrimonio}
 • ✰ Valor Total: *${fNum(haremValue)}*
 ${favLine}• ❒ Total Monedas: *${fNum(total)} ${currency}*
 • ꕤ Comandos: *${fNum(user.commands || 0)}*
-• ❁ Premium: *${user.premium ? '✅' : '❌'}*
+• ❁ Premium: *${premiumStatus}*
 
 ꕤ Usa *${usedPrefix}profile* para ver tu perfil.`.trim()
 
-        // 8. Envío Final (Imagen + Texto + Menciones)
         await conn.sendMessage(m.chat, { 
             image: { url: pp }, 
             caption: text,
@@ -102,13 +98,19 @@ ${favLine}• ❒ Total Monedas: *${fNum(total)} ${currency}*
 
     } catch (error) {
         console.error(error)
-        m.reply(`⚠️ Ocurrió un error al cargar el perfil.\n\n${error.message}`)
+        m.reply(`⚠️ Error: ${error.message}`)
     }
 }
 
 handler.help = ['profile']
 handler.tags = ['rg']
-handler.command = ['profile', 'perfil', 'perfíl']
+// Acepta ambos prefijos configurados en el sistema
+handler.command = /^(profile|perfil|perfíl)$/i
 handler.group = true
 
 export default handler
+
+async function formatTime(ms) {
+    let s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60), d = Math.floor(h / 24)
+    return `${d > 0 ? d + 'd ' : ''}${h % 24 > 0 ? h % 24 + 'h ' : ''}${m % 60 > 0 ? m % 60 + 'm' : ''}`.trim()
+}
