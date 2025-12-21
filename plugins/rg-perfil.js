@@ -1,99 +1,114 @@
-import { canvg } from 'canvg'; 
-import fetch from 'node-fetch';
+import { xpRange } from '../../lib/levelling.js'
+import moment from 'moment-timezone'
+import fetch from 'node-fetch'
 
-let handler = async (m, { conn, args }) => {
-    let userId = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.sender);
-
+let handler = async (m, { conn, usedPrefix, args }) => {
+    let userId = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : (m.quoted ? m.quoted.sender : m.sender)
+    
     try {
-        // 1. Obtener datos con seguridad total
-        let user = global.db.data.users[userId];
-        if (!user) return m.reply('❌ El usuario no está registrado en la base de datos.');
-
-        let moneda = global.moneda || 'Coins';
-        let dev = global.dev || 'Bot System';
-
-        // 2. Limpiar números para evitar errores de buffer
-        const fNum = (num) => {
-            if (!num || num >= 9007199254740991 || num === Infinity) return 'Máximo';
-            return num.toLocaleString();
-        };
-
-        let name = await conn.getName(userId).catch(_ => 'Usuario');
-        let cumpleanos = user.birth || 'No especificado';
-        let genero = user.genre || 'No especificado';
-        let description = user.description || 'Sin descripción';
-        let role = user.role || 'Sin Rango';
+        // 1. Inicialización de Datos
+        if (!global.db.data.users) global.db.data.users = {}
+        if (!global.db.data.characters) global.db.data.characters = {}
+        if (!global.db.data.users[userId]) global.db.data.users[userId] = {}
         
-        let parejaId = user.marry || null;
-        let parejaText = 'Nadie';
-        let mentions = [userId];
+        const user = global.db.data.users[userId]
+        const currency = global.moneda || 'Coins'
+        
+        // 2. Limpieza de números (Evita el bug de invisibilidad por números gigantes)
+        const fNum = (num) => {
+            if (num === Infinity || num >= 9007199254740991) return 'Máximo'
+            return (num || 0).toLocaleString()
+        }
 
+        // 3. Información Personal
+        let name = await conn.getName(userId).catch(_ => userId.split('@')[0])
+        const cumpleanos = user.birth || `Sin especificar (${usedPrefix}setbirth)`
+        const genero = user.genre || 'Sin especificar'
+        const description = user.description || 'Sin descripción'
+        
+        // Manejo de Matrimonio
+        const parejaId = user.marry || null
+        let textoMatrimonio = ''
         if (parejaId) {
-            let parejaName = await conn.getName(parejaId).catch(_ => 'Usuario');
-            parejaText = `@${parejaId.split('@')[0]} (${parejaName})`;
-            mentions.push(parejaId);
+            let parejaName = await conn.getName(parejaId).catch(_ => parejaId.split('@')[0])
+            let prefijo = genero.toLowerCase() === 'mujer' ? 'Casada con' : (genero.toLowerCase() === 'hombre' ? 'Casado con' : 'Casado/a con')
+            textoMatrimonio = `• ✧ ${prefijo}: *${parejaName}* (@${parejaId.split('@')[0]})\n`
         }
 
-        // 3. Intentar obtener la imagen, si falla usamos la de respaldo directamente
-        let perfil;
-        try {
-            perfil = await conn.profilePictureUrl(userId, 'image');
-        } catch (e) {
-            perfil = 'https://files.catbox.moe/xr2m6u.jpg';
-        }
+        // 4. Progreso y Nivel
+        const exp = user.exp || 0
+        const nivel = user.level || 0
+        const sorted = Object.entries(global.db.data.users).map(([k, v]) => ({ ...v, jid: k })).sort((a, b) => (b.level || 0) - (a.level || 0))
+        const rank = sorted.findIndex(u => u.jid === userId) + 1
+        
+        const progreso = (() => {
+            try {
+                let datos = xpRange(nivel, global.multiplier || 1)
+                let actual = exp - datos.min
+                let porcentaje = Math.min(Math.floor((actual / datos.xp) * 100), 100)
+                return `${fNum(actual)} / ${fNum(datos.xp)} _(${porcentaje}%)_`
+            } catch { return 'No disponible' }
+        })()
 
-        // 4. Texto con el diseño original solicitado
-        let profileText = `
-「✿」Perfil de @${userId.split('@')[0]}
-✦ Edad: ${user.age || 'Desconocida'}
-♛ Cumpleaños: ${cumpleanos}
-⚥ Género: ${genero}
-♡ Casado con: ${parejaText}
+        // 5. Economía y Harem
+        const coin = user.coin || 0
+        const bank = user.bank || 0
+        const total = coin + bank
+        
+        const ownedIDs = Object.entries(global.db.data.characters || {}).filter(([, c]) => c.user === userId).map(([id]) => id)
+        const haremCount = ownedIDs.length
+        const haremValue = ownedIDs.reduce((acc, id) => {
+            const char = global.db.data.characters[id] || {}
+            return acc + (typeof char.value === 'number' ? char.value : 0)
+        }, 0)
 
-✎ Rango: ${role}
-☆ Exp: ${fNum(user.exp)}
-❖ Nivel: ${fNum(user.level)}
+        const favId = user.favorite
+        const favLine = favId && global.db.data.characters?.[favId] ? `• ❀ Favorito: *${global.db.data.characters[favId].name || '???'}*\n` : ''
 
-⛁ Coins Cartera: ${fNum(user.coin)} ${moneda}
-⛃ Coins Banco: ${fNum(user.bank)} ${moneda}
-❁ Premium: ${user.premium ? '✅' : '❌'}
+        // 6. Imagen de Perfil
+        const pp = await conn.profilePictureUrl(userId, 'image').catch(_ => 'https://files.catbox.moe/xr2m6u.jpg')
 
-📝 Descripción: ${description}
-`.trim();
+        // 7. Construcción del Mensaje
+        const text = `
+\`P E R F I L  〤  U S U A R I O\`
 
-        // 5. ENVÍO SEGURO: 
-        // Primero intentamos enviar con imagen (es lo que garantiza visibilidad)
-        // Eliminamos externalAdReply complejo porque es lo que causa que solo el bot lo vea
+${description ? `> _${description}_\n` : ''}
+✰ *INFORMACIÓN PERSONAL*
+• ꕤ Nombre: *${name}*
+• ❀ Cumpleaños: *${cumpleanos}*
+• ❒ Género: *${genero}*
+${textoMatrimonio}
+❒ *PROGRESO Y NIVEL*
+• ✰ Experiencia: *${fNum(exp)}*
+• ꕤ Nivel: *${fNum(nivel)}*
+• ❀ Rango: *#${rank}*
+• ✧ Progreso: *${progreso}*
+
+✧ *ECONOMÍA Y HAREM*
+• ❀ Harem: *${haremCount} personajes*
+• ✰ Valor Total: *${fNum(haremValue)}*
+${favLine}• ❒ Total Monedas: *${fNum(total)} ${currency}*
+• ꕤ Comandos: *${fNum(user.commands || 0)}*
+• ❁ Premium: *${user.premium ? '✅' : '❌'}*
+
+ꕤ Usa *${usedPrefix}profile* para ver tu perfil.`.trim()
+
+        // 8. Envío Final (Imagen + Texto + Menciones)
         await conn.sendMessage(m.chat, { 
-            image: { url: perfil }, 
-            caption: profileText,
-            mentions: mentions,
-            contextInfo: {
-                mentionedJid: mentions,
-                // Solo dejamos lo básico para evitar errores de red
-                externalAdReply: {
-                    title: `✧ Perfil de ${name} ✧`,
-                    body: dev,
-                    thumbnailUrl: perfil,
-                    mediaType: 1,
-                    showAdAttribution: false,
-                    renderLargerThumbnail: false
-                }
-            }
-        }, { quoted: m });
+            image: { url: pp }, 
+            caption: text,
+            mentions: [userId, ...(parejaId ? [parejaId] : [])]
+        }, { quoted: m })
 
-    } catch (err) {
-        console.error("FALLO TOTAL:", err);
-        // Si todo falla (incluyendo el envío de imagen), enviamos solo texto
-        // Esto garantiza que el usuario reciba su respuesta pase lo que pase
-        let userErr = global.db.data.users[userId];
-        let backupText = `⚠️ Error visual, mostrando datos básicos:\n\nNivel: ${userErr.level}\nExp: ${userErr.exp}\nCartera: ${userErr.coin}`;
-        m.reply(backupText);
+    } catch (error) {
+        console.error(error)
+        m.reply(`⚠️ Ocurrió un error al cargar el perfil.\n\n${error.message}`)
     }
-};
+}
 
-handler.help = ['profile'];
-handler.tags = ['rg'];
-handler.command = ['profile', 'perfil'];
+handler.help = ['profile']
+handler.tags = ['rg']
+handler.command = ['profile', 'perfil', 'perfíl']
+handler.group = true
 
-export default handler;
+export default handler
