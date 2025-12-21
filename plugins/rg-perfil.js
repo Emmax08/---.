@@ -1,97 +1,62 @@
 import moment from 'moment-timezone';
-import PhoneNumber from 'awesome-phonenumber';
-import fetch from 'node-fetch';
 
 let handler = async (m, { conn, args }) => {
     try {
-        let userId;
-        if (m.quoted && m.quoted.sender) {
-            userId = m.quoted.sender;
-        } else if (m.mentionedJid && m.mentionedJid[0]) {
-            userId = m.mentionedJid[0];
-        } else {
-            userId = m.sender;
-        }
-
-        // Definir variables de respaldo por si no existen globalmente
-        let moneda = global.moneda || 'Coins';
-        let dev = global.author || 'Bot User';
+        let userId = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.sender);
 
         let user = global.db.data.users[userId];
-        if (!user) return m.reply('❌ El usuario no está registrado en la base de datos.');
+        if (!user) return m.reply('❌ El usuario no está registrado.');
 
-        // Obtener nombre de forma segura
-        let name;
-        try {
-            name = await conn.getName(userId);
-        } catch (e) {
-            name = 'Usuario';
-        }
-
-        let cumpleanos = user.birth || 'No especificado';
-        let genero = user.genre || 'No especificado';
+        let name = await conn.getName(userId).catch(_ => 'Usuario');
+        let perfil = await conn.profilePictureUrl(userId, 'image').catch(_ => 'https://files.catbox.moe/xr2m6u.jpg');
+        
         let parejaId = user.marry || null;
-        let parejaText = 'Nadie';
+        let parejaText = parejaId ? `@${parejaId.split('@')[0]}` : 'Nadie';
         let mentions = [userId];
-
-        if (parejaId) {
-            let parejaName = await conn.getName(parejaId).catch(_ => 'Usuario');
-            parejaText = `@${parejaId.split('@')[0]} (${parejaName})`;
-            mentions.push(parejaId);
-        }
-
-        let description = user.description || 'Sin descripción';
-        let exp = user.exp || 0;
-        let nivel = user.level || 0;
-        let role = user.role || 'Sin Rango';
-        let coins = user.coin || 0;
-        let bankCoins = user.bank || 0;
-
-        // Foto de perfil con URL de respaldo si falla
-        let perfil;
-        try {
-            perfil = await conn.profilePictureUrl(userId, 'image');
-        } catch (e) {
-            perfil = 'https://files.catbox.moe/xr2m6u.jpg';
-        }
+        if (parejaId) mentions.push(parejaId);
 
         let profileText = `
-「✿」Perfil de @${userId.split('@')[0]}
-✦ Edad: ${user.age || 'Desconocida'}
-♛ Cumpleaños: ${cumpleanos}
-⚥ Género: ${genero}
-♡ Casado con: ${parejaText}
+「✿」*PERFIL DE USUARIO*
+✦ *Nombre:* ${name}
+✦ *Tag:* @${userId.split('@')[0]}
+✦ *Edad:* ${user.age || 'Desconocida'}
+♛ *Cumpleaños:* ${user.birth || 'No especificado'}
+⚥ *Género:* ${user.genre || 'No especificado'}
+♡ *Pareja:* ${parejaText}
 
-✎ Rango: ${role}
-☆ Exp: ${exp.toLocaleString()}
-❖ Nivel: ${nivel}
+✎ *Rango:* ${user.role || 'Sin Rango'}
+☆ *Exp:* ${(user.exp || 0).toLocaleString()}
+❖ *Nivel:* ${user.level || 0}
 
-⛁ Coins Cartera: ${coins.toLocaleString()} ${moneda}
-⛃ Coins Banco: ${bankCoins.toLocaleString()} ${moneda}
-❁ Premium: ${user.premium ? '✅' : '❌'}
+⛁ *Cartera:* ${(user.coin || 0).toLocaleString()}
+⛃ *Banco:* ${(user.bank || 0).toLocaleString()}
+❁ *Premium:* ${user.premium ? '✅' : '❌'}
 
-📝 Descripción: ${description}
-`.trim();
+📝 *Descripción:* ${user.description || 'Sin descripción'}`.trim();
 
+        // Enviamos el mensaje de forma más "ligera" para evitar errores de red
         await conn.sendMessage(m.chat, { 
             text: profileText,
+            mentions: mentions,
             contextInfo: {
                 mentionedJid: mentions,
                 externalAdReply: {
-                    title: `✧ Perfil de ${name} ✧`,
-                    body: dev,
+                    title: `PERFIL DE ${name.toUpperCase()}`,
+                    body: 'Sistema de Usuario',
                     thumbnailUrl: perfil,
-                    sourceUrl: null,
                     mediaType: 1,
-                    showAdAttribution: true,
-                    renderLargerThumbnail: true
+                    // Eliminamos campos innecesarios que causan errores de visibilidad
+                    showAdAttribution: false, 
+                    renderLargerThumbnail: false // Desactiva esto si sigue fallando
                 }
             }
         }, { quoted: m });
 
     } catch (e) {
         console.error(e);
-        m.reply('❌ Ocurrió un error al intentar mostrar el perfil. Intenta de nuevo.');
+        // Si falla el mensaje con diseño, enviamos uno de texto simple como respaldo
+        m.reply('Hubo un problema visual, enviando perfil simple...');
+        m.reply(`Perfil de @${userId.split('@')[0]}: ${global.db.data.users[userId].level || 0} nivel.`);
     }
 };
 
