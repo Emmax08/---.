@@ -1,24 +1,35 @@
 import { exec } from 'child_process';
 
 let handler = async (m, { conn }) => {
-  m.reply(`🌟 Reforzando al pecador...`);
+  const emoji = '😈';
+  const emoji2 = '😈';
+  const emoji4 = '😈';
+  const msm = '😈';
 
-  const comando = 'find src -type f | xargs git update-index --assume-unchanged && git pull';
+  m.reply(`${emoji2} Actualizando el bot...`);
 
-  exec(comando, (err, stdout, stderr) => {
+  exec('git pull', (err, stdout, stderr) => {
     if (err) {
-      conn.reply(m.chat, `⚡️ Error: No se pudo realizar el incremento de poder.\nRazón: ${err.message}`, m);
+      conn.reply(m.chat, `${msm} Error al actualizar normalmente. Forzando actualización...`, m);
+      exec('git reset --hard origin/main && git pull', (err2, stdout2, stderr2) => {
+        if (err2) {
+          conn.reply(m.chat, `${msm} No se pudo forzar la actualización.\nRazón: ${err2.message}`, m);
+          return;
+        }
+
+        if (stderr2) console.warn(stderr2);
+
+        conn.reply(m.chat, `${emoji} Actualización forzada realizada con éxito.\n\n${stdout2}`, m);
+      });
       return;
     }
 
-    if (stderr) {
-      console.warn('Advertencia durante la actualización:', stderr);
-    }
+    if (stderr) console.warn(stderr);
 
     if (stdout.includes('Already up to date.')) {
-      conn.reply(m.chat, `🥀 El pecador ya tiene el suficiente poder.`, m);
+      conn.reply(m.chat, `${emoji4} El bot ya está actualizado.`, m);
     } else {
-      conn.reply(m.chat, `😈 Reforzamiento de poder exitoso.\n\n${stdout}`, m);
+      conn.reply(m.chat, `${emoji} Actualización realizada con éxito.\n\n${stdout}`, m);
     }
   });
 };
