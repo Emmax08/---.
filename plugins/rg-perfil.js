@@ -55,7 +55,7 @@ let handler = async (m, { conn, usedPrefix, args }) => {
         }, 0)
 
         const favId = user.favorite
-        const favLine = favId && global.db.data.characters?.[favId] ? `• ❀ Favorito: *${global.db.data.characters[favId].name || '???'}*\n` : ''
+        const favLine = favId && global.db.data.characters?.[favId] ? `•  Favorito: *${global.db.data.characters[favId].name || '???'}*\n` : ''
 
         // Imagen de perfil
         const pp = await conn.profilePictureUrl(userId, 'image').catch(_ => 'https://files.catbox.moe/xr2m6u.jpg')
