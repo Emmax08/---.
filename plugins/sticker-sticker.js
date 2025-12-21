@@ -8,39 +8,44 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
   try {
     let q = m.quoted ? m.quoted : m;
     let mime = (q.msg || q).mimetype || q.mediaType || '';
+    
+    // Definir metadatos basados en setmeta
+    const user = global.db.data.users[m.sender];
+    const meta = user?.customStickerName;
+    
+    // Si hay meta, ambos campos llevan lo mismo, si no, usa los globales
+    const packname = meta ? meta : global.packsticker;
+    const author = meta ? meta : global.packsticker2;
+
     if (/webp|image|video/g.test(mime)) {
       if (/video/g.test(mime) && (q.msg || q).seconds > 15) {
-        return m.reply(`${emoji2} ¡El video no puede durar más de 15 segundos!...`);
+        return m.reply(`¡El video no puede durar más de 15 segundos!`);
       }
+      
       let img = await q.download?.();
+      if (!img) return conn.reply(m.chat, `❌ Por favor, envía una imagen o video.`, m);
 
-      if (!img) {
-        return conn.reply(m.chat, `${emoji} Por favor, envía una imagen o video para hacer un sticker.`, m);
-      }
-
-      let out;
       try {
-        const packstickers = global.db.data.users[m.sender];
-        const texto1 = packstickers?.text1 || `${global.packsticker}`;
-        const texto2 = packstickers?.text2 || `${global.packsticker2}`;
-
-        stiker = await sticker(img, false, texto1, texto2);
+        stiker = await sticker(img, false, packname, author);
       } catch (e) {
         console.error(e);
       } finally {
         if (!stiker) {
+          let out;
           if (/webp/g.test(mime)) out = await webp2png(img);
           else if (/image/g.test(mime)) out = await uploadImage(img);
           else if (/video/g.test(mime)) out = await uploadFile(img);
           if (typeof out !== 'string') out = await uploadImage(img);
-          stiker = await sticker(false, out, global.packsticker, global.packsticker2);
+          
+          stiker = await sticker(false, out, packname, author);
         }
       }
+      
     } else if (args[0]) {
       if (isUrl(args[0])) {
-        stiker = await sticker(false, args[0], global.packsticker, global.packsticker2);
+        stiker = await sticker(false, args[0], packname, author);
       } else {
-        return m.reply(`${msm} El URL es incorrecto...`);
+        return m.reply(`El URL es incorrecto...`);
       }
     }
   } catch (e) {
@@ -50,7 +55,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
     if (stiker) {
       conn.sendFile(m.chat, stiker, 'sticker.webp', '', m);
     } else {
-      return conn.reply(m.chat, `${emoji} Por favor, envía una imagen o video para hacer un sticker.`, m);
+      return conn.reply(m.chat, `❌ No se pudo crear el sticker.`, m);
     }
   }
 };
