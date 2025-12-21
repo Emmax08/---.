@@ -9,21 +9,23 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
     let q = m.quoted ? m.quoted : m;
     let mime = (q.msg || q).mimetype || q.mediaType || '';
     
-    // Definir metadatos basados en setmeta
+    // --- LÓGICA DE METADATOS ---
     const user = global.db.data.users[m.sender];
     const meta = user?.customStickerName;
     
-    // Si hay meta, ambos campos llevan lo mismo, si no, usa los globales
+    // Si hay meta: Packname = meta, Author = vacío (" ")
+    // Si no hay: Usa los valores por defecto del bot
     const packname = meta ? meta : global.packsticker;
-    const author = meta ? meta : global.packsticker2;
+    const author = meta ? " " : global.packsticker2; 
+    // ---------------------------
 
     if (/webp|image|video/g.test(mime)) {
       if (/video/g.test(mime) && (q.msg || q).seconds > 15) {
-        return m.reply(`¡El video no puede durar más de 15 segundos!`);
+        return m.reply(`❌ ¡El video no puede durar más de 15 segundos!`);
       }
       
       let img = await q.download?.();
-      if (!img) return conn.reply(m.chat, `❌ Por favor, envía una imagen o video.`, m);
+      if (!img) return conn.reply(m.chat, `❌ No se pudo descargar el contenido.`, m);
 
       try {
         stiker = await sticker(img, false, packname, author);
@@ -45,7 +47,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
       if (isUrl(args[0])) {
         stiker = await sticker(false, args[0], packname, author);
       } else {
-        return m.reply(`El URL es incorrecto...`);
+        return m.reply(`❌ El URL es incorrecto.`);
       }
     }
   } catch (e) {
@@ -55,7 +57,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
     if (stiker) {
       conn.sendFile(m.chat, stiker, 'sticker.webp', '', m);
     } else {
-      return conn.reply(m.chat, `❌ No se pudo crear el sticker.`, m);
+      return conn.reply(m.chat, `❌ Por favor, envía una imagen o video para hacer un sticker.`, m);
     }
   }
 };
