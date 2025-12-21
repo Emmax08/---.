@@ -105,7 +105,7 @@ ${favLine}• ❒ Total Monedas: *${fNum(total)} ${currency}*
 handler.help = ['profile']
 handler.tags = ['rg']
 // Acepta ambos prefijos configurados en el sistema
-handler.command = /^(profile|perfil|perfíl)$/i
+handler.command = ['profile', 'perfil', 'perfíl']
 handler.group = true
 
 export default handler
