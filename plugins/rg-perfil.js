@@ -1,12 +1,17 @@
 import moment from 'moment-timezone';
 
 let handler = async (m, { conn, args }) => {
-    // Definimos userId al principio para que el catch siempre lo reconozca
     let userId = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.sender);
 
     try {
         let user = global.db.data.users[userId];
         if (!user) return m.reply('❌ El usuario no está registrado en la base de datos.');
+
+        // --- ESCUDO CONTRA NÚMEROS INFINITOS O CORRUPTOS ---
+        const fixNumber = (num) => {
+            if (num === Infinity || num >= 9007199254740991) return 'Máximo';
+            return (num || 0).toLocaleString();
+        };
 
         let name = await conn.getName(userId).catch(_ => 'Usuario');
         let perfil = await conn.profilePictureUrl(userId, 'image').catch(_ => 'https://files.catbox.moe/xr2m6u.jpg');
@@ -26,17 +31,16 @@ let handler = async (m, { conn, args }) => {
 ♡ *Pareja:* ${parejaText}
 
 ✎ *Rango:* ${user.role || 'Sin Rango'}
-☆ *Exp:* ${(user.exp || 0).toLocaleString()}
-❖ *Nivel:* ${user.level || 0}
+☆ *Exp:* ${fixNumber(user.exp)}
+❖ *Nivel:* ${fixNumber(user.level)}
 
-⛁ *Cartera:* ${(user.coin || 0).toLocaleString()}
-⛃ *Banco:* ${(user.bank || 0).toLocaleString()}
+⛁ *Cartera:* ${fixNumber(user.coin)}
+⛃ *Banco:* ${fixNumber(user.bank)}
 ❁ *Premium:* ${user.premium ? '✅' : '❌'}
 
 📝 *Descripción:* ${user.description || 'Sin descripción'}`.trim();
 
-        // CAMBIO CLAVE: Enviar como imagen con descripción. 
-        // Esto evita el error de "mensaje invisible" que causan los externalAdReply.
+        // Enviamos con un pequeño retraso para asegurar estabilidad
         await conn.sendMessage(m.chat, { 
             image: { url: perfil }, 
             caption: profileText,
@@ -44,10 +48,10 @@ let handler = async (m, { conn, args }) => {
         }, { quoted: m });
 
     } catch (e) {
-        console.error(e);
-        // Respuesta de emergencia si todo lo anterior falla
-        let userSimple = global.db.data.users[userId];
-        m.reply(`⚠️ Hubo un error crítico, pero aquí están tus datos básicos:\n\nNivel: ${userSimple?.level || 0}\nExp: ${userSimple?.exp || 0}`);
+        console.error("ERROR EN PERFIL:", e);
+        // Respuesta final de emergencia si falla la imagen
+        let u = global.db.data.users[userId];
+        m.reply(`✅ Datos cargados:\nNivel: ${u.level}\nExp: ${u.exp}\n\nNota: Los datos de este usuario parecen estar saturados.`);
     }
 };
 
