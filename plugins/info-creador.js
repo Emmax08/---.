@@ -10,8 +10,8 @@ const creatorsList = [
     },
     { 
       id: 'owner2',
-      name: 'FÉLIX OFC', 
-      number: '573235915041',
+      name: 'DUARTE XV', 
+      number: '573135180876',
       rango: 'Editor y Desarrollador'
     },
     { 
