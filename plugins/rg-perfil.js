@@ -1,11 +1,12 @@
 import moment from 'moment-timezone';
 
 let handler = async (m, { conn, args }) => {
-    try {
-        let userId = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.sender);
+    // Definimos userId al principio para que el catch siempre lo reconozca
+    let userId = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.sender);
 
+    try {
         let user = global.db.data.users[userId];
-        if (!user) return m.reply('❌ El usuario no está registrado.');
+        if (!user) return m.reply('❌ El usuario no está registrado en la base de datos.');
 
         let name = await conn.getName(userId).catch(_ => 'Usuario');
         let perfil = await conn.profilePictureUrl(userId, 'image').catch(_ => 'https://files.catbox.moe/xr2m6u.jpg');
@@ -34,29 +35,19 @@ let handler = async (m, { conn, args }) => {
 
 📝 *Descripción:* ${user.description || 'Sin descripción'}`.trim();
 
-        // Enviamos el mensaje de forma más "ligera" para evitar errores de red
+        // CAMBIO CLAVE: Enviar como imagen con descripción. 
+        // Esto evita el error de "mensaje invisible" que causan los externalAdReply.
         await conn.sendMessage(m.chat, { 
-            text: profileText,
-            mentions: mentions,
-            contextInfo: {
-                mentionedJid: mentions,
-                externalAdReply: {
-                    title: `PERFIL DE ${name.toUpperCase()}`,
-                    body: 'Sistema de Usuario',
-                    thumbnailUrl: perfil,
-                    mediaType: 1,
-                    // Eliminamos campos innecesarios que causan errores de visibilidad
-                    showAdAttribution: false, 
-                    renderLargerThumbnail: false // Desactiva esto si sigue fallando
-                }
-            }
+            image: { url: perfil }, 
+            caption: profileText,
+            mentions: mentions
         }, { quoted: m });
 
     } catch (e) {
         console.error(e);
-        // Si falla el mensaje con diseño, enviamos uno de texto simple como respaldo
-        m.reply('Hubo un problema visual, enviando perfil simple...');
-        m.reply(`Perfil de @${userId.split('@')[0]}: ${global.db.data.users[userId].level || 0} nivel.`);
+        // Respuesta de emergencia si todo lo anterior falla
+        let userSimple = global.db.data.users[userId];
+        m.reply(`⚠️ Hubo un error crítico, pero aquí están tus datos básicos:\n\nNivel: ${userSimple?.level || 0}\nExp: ${userSimple?.exp || 0}`);
     }
 };
 
