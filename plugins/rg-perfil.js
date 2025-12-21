@@ -13,6 +13,7 @@ let handler = async (m, { conn, usedPrefix, args }) => {
         const user = global.db.data.users[userId]
         const currency = global.moneda || 'Coins'
         
+        // Función para limpiar números gigantes
         const fNum = (num) => {
             if (num === Infinity || num >= 9007199254740991) return 'Máximo'
             return (num || 0).toLocaleString()
@@ -45,10 +46,7 @@ let handler = async (m, { conn, usedPrefix, args }) => {
             } catch { return 'No disponible' }
         })()
 
-        const coin = user.coin || 0
-        const bank = user.bank || 0
-        const total = coin + bank
-        
+        const total = (user.coin || 0) + (user.bank || 0)
         const ownedIDs = Object.entries(global.db.data.characters || {}).filter(([, c]) => c.user === userId).map(([id]) => id)
         const haremCount = ownedIDs.length
         const haremValue = ownedIDs.reduce((acc, id) => {
@@ -59,11 +57,7 @@ let handler = async (m, { conn, usedPrefix, args }) => {
         const favId = user.favorite
         const favLine = favId && global.db.data.characters?.[favId] ? `• ❀ Favorito: *${global.db.data.characters[favId].name || '???'}*\n` : ''
 
-        // Cálculo de tiempo Premium
-        let premiumTime = user.premiumTime || 0
-        let isPremium = user.premium || premiumTime > Date.now()
-        let premiumStatus = isPremium ? (premiumTime > 0 ? `✅ (${await formatTime(premiumTime - Date.now())})` : '✅ Permanente') : '❌'
-
+        // Imagen de perfil
         const pp = await conn.profilePictureUrl(userId, 'image').catch(_ => 'https://files.catbox.moe/xr2m6u.jpg')
 
         const text = `
@@ -86,7 +80,7 @@ ${textoMatrimonio}
 • ✰ Valor Total: *${fNum(haremValue)}*
 ${favLine}• ❒ Total Monedas: *${fNum(total)} ${currency}*
 • ꕤ Comandos: *${fNum(user.commands || 0)}*
-• ❁ Premium: *${premiumStatus}*
+• ❁ Premium: *${user.premium ? '✅' : '❌'}*
 
 ꕤ Usa *${usedPrefix}profile* para ver tu perfil.`.trim()
 
@@ -98,19 +92,14 @@ ${favLine}• ❒ Total Monedas: *${fNum(total)} ${currency}*
 
     } catch (error) {
         console.error(error)
-        m.reply(`⚠️ Error: ${error.message}`)
+        m.reply(`⚠️ Ocurrió un problema: ${error.message}`)
     }
 }
 
 handler.help = ['profile']
 handler.tags = ['rg']
-// Acepta ambos prefijos configurados en el sistema
+// Usar un array es lo más seguro para que el bot reconozca los comandos
 handler.command = ['profile', 'perfil', 'perfíl']
 handler.group = true
 
 export default handler
-
-async function formatTime(ms) {
-    let s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60), d = Math.floor(h / 24)
-    return `${d > 0 ? d + 'd ' : ''}${h % 24 > 0 ? h % 24 + 'h ' : ''}${m % 60 > 0 ? m % 60 + 'm' : ''}`.trim()
-}
