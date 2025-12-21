@@ -1,62 +1,96 @@
-import moment from 'moment-timezone';
+import { xpRange } from '../../lib/levelling.js'
+import moment from 'moment-timezone'
+import fetch from 'node-fetch'
 
-let handler = async (m, { conn, args }) => {
-    let userId = m.quoted ? m.quoted.sender : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.sender);
+let handler = async (m, { conn, usedPrefix, args }) => {
+try {
+let texto = await m.mentionedJid
+let userId = texto.length > 0 ? texto[0] : (m.quoted ? await m.quoted.sender : m.sender)
+let name = await (async () => global.db.data.users[userId].name || (async () => { try { const n = await conn.getName(userId); return typeof n === 'string' && n.trim() ? n : userId.split('@')[0] } catch { return userId.split('@')[0] } })())()
+if (!global.db.data.users) global.db.data.users = {}
+if (!global.db.data.characters) global.db.data.characters = {}
+if (!global.db.data.users[userId]) global.db.data.users[userId] = {}
+const user = global.db.data.users[userId]
+const cumpleanos = user.birth || `Sin especificar :< (${usedPrefix}setbirth)`
+const genero = user.genre || 'Sin especificar' 
+const pareja = user.marry
+const casado = await (async () => pareja ? (global.db.data.users[pareja]?.name?.trim() || await conn.getName(pareja).then(n => typeof n === 'string' && n.trim() ? n : pareja.split('@')[0]).catch(() => pareja.split('@')[0])) : '')()
+const description = user.description || ''
+const exp = user.exp || 0
+const nivel = user.level || 0
+const coin = user.coin || 0
+const bank = user.bank || 0
+const total = coin + bank
+const sorted = Object.entries(global.db.data.users).map(([k, v]) => ({ ...v, jid: k })).sort((a, b) => (b.level || 0) - (a.level || 0))
+const rank = sorted.findIndex(u => u.jid === userId) + 1
+const progreso = (() => {
+let datos = xpRange(nivel, global.multiplier)
+return `${exp - datos.min} => ${datos.xp} _(${Math.floor(((exp - datos.min) / datos.xp) * 100)}%)_` })()
+const premium = user.premium || global.prems.map(v => v.replace(/\D+/g, '') + '@s.whatsapp.net').includes(userId)
+const isLeft = premium ? (global.prems.includes(userId.split('@')[0]) ? 'Permanente' : (user.premiumTime ? await formatTime(user.premiumTime - Date.now()) : '—')) : '—'
+const favId = user.favorite
+const favLine = favId && global.db.data.characters?.[favId] ? `\n• ❀ Claim favorito » *${global.db.data.characters[favId].name || '???'}*` : ''
+const ownedIDs = Object.entries(global.db.data.characters).filter(([, c]) => c.user === userId).map(([id]) => id)
+const haremCount = ownedIDs.length
+const haremValue = ownedIDs.reduce((acc, id) => {
+const char = global.db.data.characters[id] || {}
+const value = typeof char.value === 'number' ? char.value : 0
+return acc + value }, 0)
 
-    try {
-        let user = global.db.data.users[userId];
-        if (!user) return m.reply('❌ El usuario no está registrado en la base de datos.');
+const pp = await conn.profilePictureUrl(userId, 'image').catch(_ => 'https://raw.githubusercontent.com/speed3xz/Storage/refs/heads/main/Arlette-Bot/b75b29441bbd967deda4365441497221.jpg')
 
-        // --- ESCUDO CONTRA NÚMEROS INFINITOS O CORRUPTOS ---
-        const fixNumber = (num) => {
-            if (num === Infinity || num >= 9007199254740991) return 'Máximo';
-            return (num || 0).toLocaleString();
-        };
+let textoCasado
+if (genero.toLowerCase() === 'mujer') {
+    textoCasado = '• ✧ Casada con: *'
+} else if (genero.toLowerCase() === 'hombre') {
+    textoCasado = '• ✧ Casado con: *'
+} else {
+    textoCasado = '• ✧ Casado/a con: *'
+}
+const textoMatrimonio = casado ? `${textoCasado}${casado}*\n` : ''
 
-        let name = await conn.getName(userId).catch(_ => 'Usuario');
-        let perfil = await conn.profilePictureUrl(userId, 'image').catch(_ => 'https://files.catbox.moe/xr2m6u.jpg');
-        
-        let parejaId = user.marry || null;
-        let parejaText = parejaId ? `@${parejaId.split('@')[0]}` : 'Nadie';
-        let mentions = [userId];
-        if (parejaId) mentions.push(parejaId);
+const text = `
+\`P E R F I L  〤  U S U A R I O\`
 
-        let profileText = `
-「✿」*PERFIL DE USUARIO*
-✦ *Nombre:* ${name}
-✦ *Tag:* @${userId.split('@')[0]}
-✦ *Edad:* ${user.age || 'Desconocida'}
-♛ *Cumpleaños:* ${user.birth || 'No especificado'}
-⚥ *Género:* ${user.genre || 'No especificado'}
-♡ *Pareja:* ${parejaText}
+${description ? `${description}\n\n` : ''}✰ *INFORMACIÓN PERSONAL*
+• ꕤ Nombre: *${name}*
+• ❀ Cumpleaños: *${cumpleanos}*
+• ❒ Género: *${genero}*
+${textoMatrimonio}
+❒ *PROGRESO Y NIVEL*
+• ✰ Experiencia: *${exp.toLocaleString()}*
+• ꕤ Nivel: *${nivel}*
+• ❀ Rango: *#${rank}*
+• ✧ Progreso: *${progreso}*
 
-✎ *Rango:* ${user.role || 'Sin Rango'}
-☆ *Exp:* ${fixNumber(user.exp)}
-❖ *Nivel:* ${fixNumber(user.level)}
+✧ *ECONOMÍA Y HEREM*
+• ❀ Harem: *${haremCount}*
+• ✰ Valor Total: *${haremValue.toLocaleString()}*
+${favLine}• ❒ Monedas: *${total.toLocaleString()} ${currency}*
+• ꕤ Comandos: *${user.commands || 0}*
 
-⛁ *Cartera:* ${fixNumber(user.coin)}
-⛃ *Banco:* ${fixNumber(user.bank)}
-❁ *Premium:* ${user.premium ? '✅' : '❌'}
+ꕤ Usa ${usedPrefix}profile para ver tu perfil.`
+await conn.sendMessage(m.chat, { image: { url: pp }, caption: text })
+} catch (error) {
+await m.reply(`⚠︎ Se ha producido un problema.\n> Usa *${usedPrefix}report* para informarlo.\n\n${error.message}`, m)
+}}
 
-📝 *Descripción:* ${user.description || 'Sin descripción'}`.trim();
+handler.help = ['profile']
+handler.tags = ['rg']
+handler.command = ['profile', 'perfil', 'perfíl']
+handler.group = true
 
-        // Enviamos con un pequeño retraso para asegurar estabilidad
-        await conn.sendMessage(m.chat, { 
-            image: { url: perfil }, 
-            caption: profileText,
-            mentions: mentions
-        }, { quoted: m });
+export default handler
 
-    } catch (e) {
-        console.error("ERROR EN PERFIL:", e);
-        // Respuesta final de emergencia si falla la imagen
-        let u = global.db.data.users[userId];
-        m.reply(`✅ Datos cargados:\nNivel: ${u.level}\nExp: ${u.exp}\n\nNota: Los datos de este usuario parecen estar saturados.`);
-    }
-};
-
-handler.help = ['profile'];
-handler.tags = ['rg'];
-handler.command = ['profile', 'perfil'];
-
-export default handler;
+async function formatTime(ms) {
+let s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60), d = Math.floor(h / 24)
+let months = Math.floor(d / 30), weeks = Math.floor((d % 30) / 7)
+s %= 60; m %= 60; h %= 24; d %= 7
+let t = months ? [`${months} mes${months > 1 ? 'es' : ''}`] :
+weeks ? [`${weeks} semana${weeks > 1 ? 's' : ''}`] :
+d ? [`${d} día${d > 1 ? 's' : ''}`] : []
+if (h) t.push(`${h} hora${h > 1 ? 's' : ''}`)
+if (m) t.push(`${m} minuto${m > 1 ? 's' : ''}`)
+if (s) t.push(`${s} segundo${s > 1 ? 's' : ''}`)
+return t.length > 1 ? t.slice(0, -1).join(' ') + ' y ' + t.slice(-1) : t[0]
+}
