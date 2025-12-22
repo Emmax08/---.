@@ -1,27 +1,24 @@
 import fetch from 'node-fetch'
 
-// --- CONSTANTES DE CONFIGURACIÓN DE LA API DE FLASK ---
-const FLASK_API_URL = 'http://neviapi.ddns.net:5000/ia/gemini';
-const FLASK_API_KEY = 'ellen';
+// --- CONFIGURACIÓN DE LA NUEVA API (COPILOT) ---
+const ALYA_API_KEY = 'Alyabot'; // Tu Key
 const BOT_NAME = 'Alastor'; 
 
-// Instrucción de sistema: Define la personalidad profunda de Alastor (El Demonio de la Radio)
 const SYSTEM_PROMPT = `Actúa como Alastor de Hazbin Hotel. Tu personalidad es la de un locutor de radio de los años 30: elegante, caballeroso, elocuente, pero profundamente sádico y oscuro. 
 REGLAS:
 1. Habla con un vocabulario sofisticado y usa términos como "Estimado", "Qué delicia", "Espectáculo".
 2. Incluye sonidos de radio entre asteriscos: *estática de radio*, *risas grabadas*, *sintonía de jazz*.
 3. Eres condescendiente con la tecnología moderna; la consideras una "baratija ruidosa".
 4. NUNCA pierdas la sonrisa en tus palabras, incluso cuando amenaces elegantemente.
-5. Tu objetivo es entretenerte a costa de los demás.`;
+5. Tu objetivo es entretenerte a costa de los demás. Responde siempre en español.`;
 
-// Expresión regular para buscar "Alastor" al inicio del mensaje
 const BOT_TRIGGER_REGEX = new RegExp(`^\\s*${BOT_NAME}\\s*`, 'i');
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-    // --- LÓGICA DE ACTIVACIÓN ---
     let query = text ? text.trim() : ''; 
     let isTriggered = false;
 
+    // Validación de activación
     const match = query.match(BOT_TRIGGER_REGEX);
     if (match) {
         query = query.substring(match[0].length).trim(); 
@@ -34,80 +31,45 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
     if (!isTriggered) return;
 
-    // Respuesta si no hay texto
     if (!query) { 
         return conn.reply(m.chat, `*estática de radio* 🎙️\n¡Oh, querido amigo! El silencio es aburrido, ¿no crees? ¡Dime algo fascinante para que el show pueda comenzar!`, m);
     }
 
-    // --- LÓGICA PRINCIPAL CON LA API ---
     try {
-        // Usamos rwait y done si están definidos globalmente, de lo contrario usamos emojis fijos
-        await m.react(typeof rwait !== 'undefined' ? rwait : '📻');
+        await m.react('📻');
         conn.sendPresenceUpdate('composing', m.chat);
         
-        const chatStorageKey = m.isGroup ? m.chat : m.sender;
-        let userData = global.db.data.users[chatStorageKey] || {};
-        const chatID = userData.gemini_chat_id;
+        // Construcción de la consulta con la personalidad inyectada
+        const fullPrompt = `${SYSTEM_PROMPT}\n\nUsuario dice: ${query}`;
+        const apiUrl = `https://rest.alyabotpe.xyz/ai/copilot?text=${encodeURIComponent(fullPrompt)}&key=${ALYA_API_KEY}`;
 
-        let messageToSend = query;
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) throw new Error('Interferencia en la señal de Alya');
 
-        // Si es el inicio, forzamos la personalidad de Alastor
-        if (!chatID) {
-            messageToSend = `${SYSTEM_PROMPT}\n\n[INICIO DEL SHOW] El pecador pregunta: ${query}`;
-            console.log(`[ALASTOR] Iniciando transmisión radial para ${chatStorageKey}`);
-        }
+        const res = await response.json();
+        
+        // La API de Alyabot suele devolver el resultado en res.result o res.data
+        // Ajustamos según la estructura estándar de esa API
+        const alastorResponse = res.result || res.answer || res.message;
 
-        const payload = {
-            message: messageToSend, 
-            id_chat: chatID || null
-        };
-
-        const apii = await fetch(FLASK_API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-API-KEY': FLASK_API_KEY
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!apii.ok) {
-            await m.react('❌');
-            throw new Error(`*estática molesta* ¡Mis disculpas! Mi señal se ha cruzado con un canal de televisión barato.`);
-        }
-
-        const res = await apii.json();
-        const geminiResponse = res.message;
-        const newChatID = res.id_chat;
-        const expiryTime = res.expires_in;
-
-        if (!geminiResponse) {
-            await m.react('❌');
-            throw new Error('El éter no me devolvió ninguna palabra... ¡Qué descortés!');
-        }
-
-        // Guardar el ID de sesión en la DB global
-        if (newChatID) {
-            if (!global.db.data.users[chatStorageKey]) global.db.data.users[chatStorageKey] = {};
-            global.db.data.users[chatStorageKey].gemini_chat_id = newChatID;
+        if (!alastorResponse) {
+            throw new Error('El éter no devolvió respuesta');
         }
         
-        // Formatear la respuesta con el estilo de Alastor
-        const minutes = Math.floor(expiryTime / 60);
-        const finalResponse = `🎙️ **ALASTOR BROADCAST** 🎙️\n\n${geminiResponse}\n\n> 📻 *Frecuencia: ${newChatID}* | *Cierre en: ${minutes} minutos*`;
+        // Formato final de la transmisión
+        const finalResponse = `🎙️ **「 ALASTOR BROADCAST 」** 🎙️\n\n${alastorResponse}\n\n> 📻 *Transmisión vía Alyabot Network*`;
 
-        await m.reply(finalResponse);
-        await m.react(typeof done !== 'undefined' ? done : '✅');
+        await conn.sendMessage(m.chat, { text: finalResponse }, { quoted: m });
+        await m.react('✅');
 
     } catch (error) {
         await m.react('❌');
-        console.error('Error en el canal de Alastor:', error.message);
-        const errorMsg = typeof msm !== 'undefined' ? msm : '⚠️';
-        await conn.reply(m.chat, `${errorMsg} *estática de radio* ¡Vaya, qué imprevisto! Parece que mi transmisión ha fallado: ${error.message}`, m);
+        console.error('Error en Alastor Copilot:', error);
+        await conn.reply(m.chat, `*estática molesta* ¡Vaya, qué imprevisto! Mi señal de radio ha sido interrumpida por una interferencia externa. ¡Qué descortesía!`, m);
     }
 }
 
-// Configuración del handler
 handler.help = ['ia', 'alastor']
 handler.tags = ['ai']
 handler.register = true
