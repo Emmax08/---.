@@ -4,8 +4,7 @@
 
 import ws from 'ws'
 
-const handler = async (m, { conn, usedPrefix, command }) => {
-  // 1. Filtrar lista de Entidades activas en el dial
+const handler = async (m, { conn }) => {
   const activeBots = [...new Set([
     ...global.conns
       .filter((c) => c.user && c.ws.socket && c.ws.socket.readyState !== ws.CLOSED)
@@ -19,41 +18,31 @@ const handler = async (m, { conn, usedPrefix, command }) => {
   const chat = global.db.data.chats[m.chat]
   const who = m.mentionedJid[0] ? m.mentionedJid[0] : (m.quoted ? m.quoted.sender : false)
 
-  // 2. Validaciones de jerarquía
-  if (!who) return conn.reply(m.chat, `🎙️ *Transmisión Interrumpida*\n\nDebes mencionar a un pecador o responder a su mensaje para designar quién posee el mayor poder.`, m)
+  if (!who) return conn.reply(m.chat, `🎙️ *Transmisión Interrumpida*\n\nDebes mencionar a un pecador para designar quién posee el mayor poder.`, m)
   
   if (!activeBots.includes(who)) {
-    return conn.reply(m.chat, `📻 *Veredicto de Alastor*\n\nEl ente @${who.split`@`[0]} es un alma demasiado débil o su señal se ha extinguido en el vacío.`, m, { mentions: [who] })
+    return conn.reply(m.chat, `📻 *Veredicto de Alastor*\n\nEl ente @${who.split`@`[0]} es un alma demasiado débil o está fuera del aire.`, m, { mentions: [who] })
   }
 
-  if (chat.primaryBot === who) {
-    return conn.reply(m.chat, `👸 *Jerarquía Absoluta*\n\n@${who.split`@`[0]} ya es reconocido como el pecador más fuerte de este infierno.`, m, { mentions: [who] })
-  }
-
-  // 3. Ejecución del Cambio de Poder
   try {
-    chat.primaryBot = who
+    // ESTA ES LA CLAVE: Guardamos el JID del elegido
+    chat.primaryBot = who 
+    
     const txt = `🎙️ *¡Atención a todos los rincones del infierno!* ✨\n\n` +
                 `El pecador @${who.split`@`[0]} ha sido proclamado como **El pecador más fuerte**.\n` +
-                `Que su sombra se extienda y su poder silencie a los mediocres.\n\n` +
+                `Solo él tiene permiso de hablar en esta frecuencia.\n\n` +
                 `*¡El espectáculo apenas comienza!*`
     
     await conn.reply(m.chat, txt, m, { mentions: [who] })
   } catch (e) {
-    console.error(e)
-    conn.reply(m.chat, `⚠️ *¡Error en la frecuencia!*\n\nLa estática ha impedido que el pecador más fuerte tome su lugar.`, m)
+    conn.reply(m.chat, `⚠️ *¡Error en la frecuencia!*`, m)
   }
 }
 
 handler.help = ['setprimary']
 handler.tags = ['grupo']
-handler.command = /^(setprimary)$/i // Funciona con . y #
+handler.command = /^(setprimary)$/i 
 handler.group = true
 handler.admin = true
-handler.botAdmin = true
 
 export default handler
-
-// ༻✦༺ ༻✧༺ ༻✦༺ ༻⸙͎۪۫༺ ༻✦༺ ༻✧༺ ༻✦༺
-//   El pecador más fuerte ha tomado el control del dial
-// ༻✦༺ ༻✧༺ ༻✦༺ ༻⸙͎۪۫༺ ༻✦༺ ༻✧༺ ༻✦༺
