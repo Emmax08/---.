@@ -1,7 +1,6 @@
 import fetch from 'node-fetch'
 
-// --- CONFIGURACIÓN DE LA NUEVA API (COPILOT) ---
-const ALYA_API_KEY = 'Alyabot'; // Tu Key
+// --- CONFIGURACIÓN ---
 const BOT_NAME = 'Alastor'; 
 
 const SYSTEM_PROMPT = `Actúa como Alastor de Hazbin Hotel. Tu personalidad es la de un locutor de radio de los años 30: elegante, caballeroso, elocuente, pero profundamente sádico y oscuro. 
@@ -9,8 +8,8 @@ REGLAS:
 1. Habla con un vocabulario sofisticado y usa términos como "Estimado", "Qué delicia", "Espectáculo".
 2. Incluye sonidos de radio entre asteriscos: *estática de radio*, *risas grabadas*, *sintonía de jazz*.
 3. Eres condescendiente con la tecnología moderna; la consideras una "baratija ruidosa".
-4. NUNCA pierdas la sonrisa en tus palabras, incluso cuando amenaces elegantemente.
-5. Tu objetivo es entretenerte a costa de los demás. Responde siempre en español.`;
+4. NUNCA pierdas la sonrisa en tus palabras.
+5. Tu objetivo es entretenerte a costa de los demás.`;
 
 const BOT_TRIGGER_REGEX = new RegExp(`^\\s*${BOT_NAME}\\s*`, 'i');
 
@@ -18,7 +17,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     let query = text ? text.trim() : ''; 
     let isTriggered = false;
 
-    // Validación de activación
+    // Lógica de activación (Nombre o comandos .ia / #ia)
     const match = query.match(BOT_TRIGGER_REGEX);
     if (match) {
         query = query.substring(match[0].length).trim(); 
@@ -39,34 +38,32 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         await m.react('📻');
         conn.sendPresenceUpdate('composing', m.chat);
         
-        // Construcción de la consulta con la personalidad inyectada
-        const fullPrompt = `${SYSTEM_PROMPT}\n\nUsuario dice: ${query}`;
-        const apiUrl = `https://rest.alyabotpe.xyz/ai/copilot?text=${encodeURIComponent(fullPrompt)}&key=${ALYA_API_KEY}`;
+        // Inyectamos la personalidad en la consulta
+        const fullText = `${SYSTEM_PROMPT}\n\nPregunta del pecador: ${query}`;
+        
+        // Llamada a la API exacta
+        const apiUrl = `https://rest.alyabotpe.xyz/ai/copilot?text=${encodeURIComponent(fullText)}&key=Alyabot`;
 
         const response = await fetch(apiUrl);
-        
-        if (!response.ok) throw new Error('Interferencia en la señal de Alya');
-
         const res = await response.json();
         
-        // La API de Alyabot suele devolver el resultado en res.result o res.data
-        // Ajustamos según la estructura estándar de esa API
-        const alastorResponse = res.result || res.answer || res.message;
+        // Mapeo exacto según el JSON que proporcionaste: res.response
+        const alastorResponse = res.response;
 
         if (!alastorResponse) {
-            throw new Error('El éter no devolvió respuesta');
+            throw new Error('La señal se perdió en el éter...');
         }
         
-        // Formato final de la transmisión
-        const finalResponse = `🎙️ **「 ALASTOR BROADCAST 」** 🎙️\n\n${alastorResponse}\n\n> 📻 *Transmisión vía Alyabot Network*`;
+        // Formato final de salida
+        const finalResponse = `🎙️ **「 ALASTOR BROADCAST 」** 🎙️\n\n${alastorResponse}\n\n> 📻 *Transmisión de Ander*`;
 
-        await conn.sendMessage(m.chat, { text: finalResponse }, { quoted: m });
+        await m.reply(finalResponse);
         await m.react('✅');
 
     } catch (error) {
         await m.react('❌');
-        console.error('Error en Alastor Copilot:', error);
-        await conn.reply(m.chat, `*estática molesta* ¡Vaya, qué imprevisto! Mi señal de radio ha sido interrumpida por una interferencia externa. ¡Qué descortesía!`, m);
+        console.error('Error en el canal de Alastor:', error);
+        await conn.reply(m.chat, `*estática de radio* ¡Vaya, qué imprevisto! Parece que mi transmisión ha fallado. ¡Qué descortesía!`, m);
     }
 }
 
