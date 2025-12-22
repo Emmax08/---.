@@ -101,7 +101,7 @@ const roles = {
   '*🌟 Adan 🌟*': 300000,
   '*🌟 Lucifer 🌟*': 400000,
   '*🌟 Dios  🌟*': 500000000,
-  '*👑 Alastor forma definitiva  👑*': 10000000000000000
+  '*👑 Alastor forma definitiva  👑*': 100000000000000
 }
 
 let handler = m => m
