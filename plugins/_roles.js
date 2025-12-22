@@ -96,12 +96,12 @@ const roles = {
   '*Pecado capital III*🌟': 950,
   '*Pecado capital IV*🌟': 975,
   '*Pecado capital V*🌟': 999,
-  '*🌟 Serafin mayor 🌟*': 100,
-  '*🌟 Eva 🌟*': 20000,
-  '*🌟 Adan 🌟*': 300000,
-  '*🌟 Lucifer 🌟*': 400000,
-  '*🌟 Dios  🌟*': 50000000,
-  '*👑 Alastor forma definitiva  👑*': 1000000000000000
+  '*🌟 Serafin mayor 🌟*': 1000,
+  '*🌟 Eva 🌟*': 200000,
+  '*🌟 Adan 🌟*': 3000000,
+  '*🌟 Lucifer 🌟*': 40000000,
+  '*🌟 Dios  🌟*': 5000000000,
+  '*👑 Alastor forma definitiva  👑*': 100000000000000000
 }
 
 let handler = m => m
