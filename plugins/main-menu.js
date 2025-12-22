@@ -11,7 +11,7 @@ const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
 // --- Configuración del Bot y Estilo ---
-const newsletterJid = '120363422454443738@newsletter';
+const newsletterJid = '120363406360158608@newsletter';
 const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡ 𝐀𝐥𝐚𝐬𝐭𝐨𝐫\'s 𝐒ervice';
 const packname = '˚𝐀𝐥𝐚𝐬𝐭𝐨𝐫-bot';
 
