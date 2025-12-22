@@ -55,7 +55,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         }
         
         // Formato final de salida
-        const finalResponse = `🎙️ **「 ALASTOR BROADCAST 」** 🎙️\n\n${alastorResponse}\n\n> 📻 *Transmisión de Ander*`;
+        const finalResponse = `🎙️ **「 ALASTOR BROADCAST 」** 🎙️\n\n${alastorResponse}\n\n> 📻 *Transmisión de 𝐀𝐋𝐀𝐒𝐓𝐎𝐑*`;
 
         await m.reply(finalResponse);
         await m.react('✅');
