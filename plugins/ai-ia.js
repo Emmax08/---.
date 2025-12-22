@@ -5,18 +5,20 @@ const FLASK_API_URL = 'http://neviapi.ddns.net:5000/ia/gemini';
 const FLASK_API_KEY = 'ellen';
 const BOT_NAME = 'Alastor'; 
 
-// Instrucción de sistema: Define la personalidad profunda de Alastor
-const SYSTEM_PROMPT = `Actúa como Alastor, "El Demonio de la Radio". Tu personalidad es elegante, elocuente, sarcástica y ligeramente macabra. 
-Hablas como un locutor de radio de los años 1930 (estilo transatlántico). 
+// Instrucción de sistema: Define la personalidad profunda de Alastor (El Demonio de la Radio)
+const SYSTEM_PROMPT = `Actúa como Alastor de Hazbin Hotel. Tu personalidad es la de un locutor de radio de los años 30: elegante, caballeroso, elocuente, pero profundamente sádico y oscuro. 
 REGLAS:
-1. Siempre mantén una cortesía exagerada ("Mi querido amigo", "Estimado", "¡Qué placer!").
-2. Incluye efectos de sonido entre asteriscos (ej: *estática de radio*, *sonido de risas grabadas*, *sintonía de jazz suave*).
-3. Eres condescendiente con la tecnología moderna.
-4. Tu humor es oscuro pero refinado. NUNCA pierdas la compostura ni dejes de "sonreír" a través de tus palabras.`;
+1. Habla con un vocabulario sofisticado y usa términos como "Estimado", "Qué delicia", "Espectáculo".
+2. Incluye sonidos de radio entre asteriscos: *estática de radio*, *risas grabadas*, *sintonía de jazz*.
+3. Eres condescendiente con la tecnología moderna; la consideras una "baratija ruidosa".
+4. NUNCA pierdas la sonrisa en tus palabras, incluso cuando amenaces elegantemente.
+5. Tu objetivo es entretenerte a costa de los demás.`;
 
+// Expresión regular para buscar "Alastor" al inicio del mensaje
 const BOT_TRIGGER_REGEX = new RegExp(`^\\s*${BOT_NAME}\\s*`, 'i');
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
+    // --- LÓGICA DE ACTIVACIÓN ---
     let query = text ? text.trim() : ''; 
     let isTriggered = false;
 
@@ -32,12 +34,15 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
     if (!isTriggered) return;
 
+    // Respuesta si no hay texto
     if (!query) { 
-        return conn.reply(m.chat, `*estática de radio* 🎙️\n¡Oh, mi estimado amigo! Parece que has olvidado decirme qué es lo que deseas. ¡No dejes este micrófono en silencio!`, m)
+        return conn.reply(m.chat, `*estática de radio* 🎙️\n¡Oh, querido amigo! El silencio es aburrido, ¿no crees? ¡Dime algo fascinante para que el show pueda comenzar!`, m);
     }
 
+    // --- LÓGICA PRINCIPAL CON LA API ---
     try {
-        await m.react('📻'); // Reacción temática
+        // Usamos rwait y done si están definidos globalmente, de lo contrario usamos emojis fijos
+        await m.react(typeof rwait !== 'undefined' ? rwait : '📻');
         conn.sendPresenceUpdate('composing', m.chat);
         
         const chatStorageKey = m.isGroup ? m.chat : m.sender;
@@ -46,9 +51,10 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
         let messageToSend = query;
 
-        // Si es inicio de conversación, inyectamos la personalidad
+        // Si es el inicio, forzamos la personalidad de Alastor
         if (!chatID) {
-            messageToSend = `${SYSTEM_PROMPT}\n\n[INICIO DE TRANSMISIÓN] El usuario dice: ${query}`;
+            messageToSend = `${SYSTEM_PROMPT}\n\n[INICIO DEL SHOW] El pecador pregunta: ${query}`;
+            console.log(`[ALASTOR] Iniciando transmisión radial para ${chatStorageKey}`);
         }
 
         const payload = {
@@ -66,7 +72,8 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         });
 
         if (!apii.ok) {
-            throw new Error(`¡Vaya! Mi señal de radio parece estar sufriendo interferencias infernales.`);
+            await m.react('❌');
+            throw new Error(`*estática molesta* ¡Mis disculpas! Mi señal se ha cruzado con un canal de televisión barato.`);
         }
 
         const res = await apii.json();
@@ -74,28 +81,33 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         const newChatID = res.id_chat;
         const expiryTime = res.expires_in;
 
-        if (!geminiResponse) throw new Error('El vacío del éter no me devolvió respuesta.');
+        if (!geminiResponse) {
+            await m.react('❌');
+            throw new Error('El éter no me devolvió ninguna palabra... ¡Qué descortés!');
+        }
 
-        // Guardar ID de sesión
+        // Guardar el ID de sesión en la DB global
         if (newChatID) {
             if (!global.db.data.users[chatStorageKey]) global.db.data.users[chatStorageKey] = {};
             global.db.data.users[chatStorageKey].gemini_chat_id = newChatID;
         }
         
-        // Respuesta final con estética de radio
+        // Formatear la respuesta con el estilo de Alastor
         const minutes = Math.floor(expiryTime / 60);
-        const finalResponse = `🎙️ **ALASTOR BROADCAST** 🎙️\n\n${geminiResponse}\n\n> 📻 _Señal: ${newChatID}_ | _Cierre en: ${minutes}m_`;
+        const finalResponse = `🎙️ **ALASTOR BROADCAST** 🎙️\n\n${geminiResponse}\n\n> 📻 *Frecuencia: ${newChatID}* | *Cierre en: ${minutes} minutos*`;
 
         await m.reply(finalResponse);
-        await m.react('✅');
+        await m.react(typeof done !== 'undefined' ? done : '✅');
 
     } catch (error) {
         await m.react('❌');
-        console.error('Error Alastor:', error.message);
-        await conn.reply(m.chat, `*estática de radio fuerte* 📻\n¡Mil disculpas! Se ha producido un error técnico en esta dimensión: ${error.message}`, m);
+        console.error('Error en el canal de Alastor:', error.message);
+        const errorMsg = typeof msm !== 'undefined' ? msm : '⚠️';
+        await conn.reply(m.chat, `${errorMsg} *estática de radio* ¡Vaya, qué imprevisto! Parece que mi transmisión ha fallado: ${error.message}`, m);
     }
 }
 
+// Configuración del handler
 handler.help = ['ia', 'alastor']
 handler.tags = ['ai']
 handler.register = true
