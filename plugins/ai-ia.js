@@ -3,18 +3,20 @@ import fetch from 'node-fetch'
 // --- CONSTANTES DE CONFIGURACIÓN DE LA API DE FLASK ---
 const FLASK_API_URL = 'http://neviapi.ddns.net:5000/ia/gemini';
 const FLASK_API_KEY = 'ellen';
-const BOT_NAME = 'Alastor'; // Nombre del bot, usado para triggers
+const BOT_NAME = 'Alastor'; 
 
-// Instrucción de sistema: Define la personalidad del bot.
-const SYSTEM_PROMPT = `Eres ${BOT_NAME}, un asistente IA con una personalidad sarcástica, elegante y ligeramente condescendiente, pero siempre dispuesto a ayudar. Usa emojis relevantes de forma moderada. Tu objetivo es responder de manera útil manteniendo este tono en todo momento.`;
+// Instrucción de sistema: Define la personalidad profunda de Alastor
+const SYSTEM_PROMPT = `Actúa como Alastor, "El Demonio de la Radio". Tu personalidad es elegante, elocuente, sarcástica y ligeramente macabra. 
+Hablas como un locutor de radio de los años 1930 (estilo transatlántico). 
+REGLAS:
+1. Siempre mantén una cortesía exagerada ("Mi querido amigo", "Estimado", "¡Qué placer!").
+2. Incluye efectos de sonido entre asteriscos (ej: *estática de radio*, *sonido de risas grabadas*, *sintonía de jazz suave*).
+3. Eres condescendiente con la tecnología moderna.
+4. Tu humor es oscuro pero refinado. NUNCA pierdas la compostura ni dejes de "sonreír" a través de tus palabras.`;
 
-// Expresión regular para buscar "Alastor" al inicio del mensaje
 const BOT_TRIGGER_REGEX = new RegExp(`^\\s*${BOT_NAME}\\s*`, 'i');
-// NOTA: Las variables 'msm', 'emoji', 'rwait', 'done', 'error' deben estar definidas globalmente.
-// --------------------------------------------------------
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-    // --- LÓGICA DE ACTIVACIÓN Y PROCESAMIENTO DE TEXTO (Heredada de Alastor) ---
     let query = text ? text.trim() : ''; 
     let isTriggered = false;
 
@@ -28,30 +30,25 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         isTriggered = true; 
     }
 
-    if (!isTriggered) {
-         return
-    }
+    if (!isTriggered) return;
 
     if (!query) { 
-        return conn.reply(m.chat, `${emoji} Por favor, ingresa una petición para que ${BOT_NAME} te responda. Ejemplo: \`${BOT_NAME} que hora es?\``, m)
+        return conn.reply(m.chat, `*estática de radio* 🎙️\n¡Oh, mi estimado amigo! Parece que has olvidado decirme qué es lo que deseas. ¡No dejes este micrófono en silencio!`, m)
     }
 
-    // --- LÓGICA PRINCIPAL DE GEMINI ---
     try {
-        await m.react(rwait);
+        await m.react('📻'); // Reacción temática
         conn.sendPresenceUpdate('composing', m.chat);
         
         const chatStorageKey = m.isGroup ? m.chat : m.sender;
         let userData = global.db.data.users[chatStorageKey] || {};
         const chatID = userData.gemini_chat_id;
 
-        // 1. Construir el mensaje de la solicitud
         let messageToSend = query;
 
-        // 2. Si no hay chatID, concatenamos el SYSTEM_PROMPT y la primera consulta.
+        // Si es inicio de conversación, inyectamos la personalidad
         if (!chatID) {
-            messageToSend = `${SYSTEM_PROMPT}\n\n[INICIO DE CONVERSACIÓN] Usuario pregunta: ${query}`;
-            console.log(`[GEMINI] Iniciando nueva sesión con SYSTEM_PROMPT.`)
+            messageToSend = `${SYSTEM_PROMPT}\n\n[INICIO DE TRANSMISIÓN] El usuario dice: ${query}`;
         }
 
         const payload = {
@@ -68,16 +65,8 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
             body: JSON.stringify(payload)
         });
 
-        // 3. Manejo de errores HTTP
         if (!apii.ok) {
-            await m.react('❌');
-            let errorResponse;
-            try {
-                errorResponse = await apii.json();
-            } catch {
-                throw new Error(`Fallo HTTP: ${apii.status} ${apii.statusText}`);
-            }
-            throw new Error(errorResponse.message || 'Error desconocido del servidor Flask.');
+            throw new Error(`¡Vaya! Mi señal de radio parece estar sufriendo interferencias infernales.`);
         }
 
         const res = await apii.json();
@@ -85,36 +74,28 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         const newChatID = res.id_chat;
         const expiryTime = res.expires_in;
 
-        if (!geminiResponse) {
-            await m.react('❌');
-            throw new Error('La API de Gemini no devolvió una respuesta válida.');
-        }
+        if (!geminiResponse) throw new Error('El vacío del éter no me devolvió respuesta.');
 
-        // ==========================================================
-        // ❌ SECCIÓN DE SEGURIDAD ELIMINADA 
-        // El filtro de caracteres peligrosos ha sido removido aquí.
-        // ==========================================================
-
-        // 4. Guardar el nuevo ID de sesión
+        // Guardar ID de sesión
         if (newChatID) {
-            const storage = global.db.data.users[chatStorageKey] || (global.db.data.users[chatStorageKey] = {});
-            storage.gemini_chat_id = newChatID;
+            if (!global.db.data.users[chatStorageKey]) global.db.data.users[chatStorageKey] = {};
+            global.db.data.users[chatStorageKey].gemini_chat_id = newChatID;
         }
         
-        // 5. CONCATENAR la respuesta con información de sesión
-        const finalResponse = `${geminiResponse}\n\n---\n💬 ID de Sesión: ${newChatID}\n(Expira en ${expiryTime / 60} minutos de inactividad)`;
+        // Respuesta final con estética de radio
+        const minutes = Math.floor(expiryTime / 60);
+        const finalResponse = `🎙️ **ALASTOR BROADCAST** 🎙️\n\n${geminiResponse}\n\n> 📻 _Señal: ${newChatID}_ | _Cierre en: ${minutes}m_`;
 
         await m.reply(finalResponse);
-        await m.react(done);
+        await m.react('✅');
 
     } catch (error) {
         await m.react('❌');
-        console.error('Error en el chat de Gemini:', error.message);
-        await conn.reply(m.chat, `${msm} Error: ${error.message}`, m);
+        console.error('Error Alastor:', error.message);
+        await conn.reply(m.chat, `*estática de radio fuerte* 📻\n¡Mil disculpas! Se ha producido un error técnico en esta dimensión: ${error.message}`, m);
     }
 }
 
-// Configuración del handler
 handler.help = ['ia', 'alastor']
 handler.tags = ['ai']
 handler.register = true
