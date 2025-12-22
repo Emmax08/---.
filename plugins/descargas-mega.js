@@ -2,8 +2,8 @@ import { File } from "megajs";
 import path from "path";
 
 // --- Constantes y Configuración de Transmisión (Estilo Ellen Joe) ---
-const newsletterJid = '120363418071540900@newsletter';
-const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡ 𝐄llen 𝐉ᴏᴇ\'s 𝐒ervice';
+const newsletterJid = '120363406360158608@newsletter';
+const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡ 𝐀𝐋𝐀𝐒𝐓𝐎𝐑\'s 𝐒ervice';
 
 let handler = async (m, { conn, args, usedPrefix, text, command }) => {
     const name = conn.getName(m.sender); // Identificando al Proxy
@@ -18,7 +18,7 @@ let handler = async (m, { conn, args, usedPrefix, text, command }) => {
             serverMessageId: -1
         },
         externalAdReply: {
-            title: 'Ellen Joe: Pista localizada. 🦈',
+            title: 'Alastor: Alma localizada. 🖤',
             body: `Procesando solicitud para el/la Proxy ${name}...`,
             thumbnail: icons, // Asegúrate de que 'icons' y 'redes' estén definidos globalmente
             sourceUrl: redes,
@@ -29,7 +29,7 @@ let handler = async (m, { conn, args, usedPrefix, text, command }) => {
 
     try {
         if (!text) {
-            return conn.reply(m.chat, `🦈 *Rastro frío, Proxy ${name}.* Necesito un identificador de archivo de MEGA para proceder.\n\n_Ejemplo: ${usedPrefix + command} [tu_enlace_MEGA_aquí]`, m, { contextInfo, quoted: m });
+            return conn.reply(m.chat, `😈 *Rastro frío, Proxy ${name}.* Necesito un identificador de archivo de MEGA para proceder.\n\n_Ejemplo: ${usedPrefix + command} [tu_enlace_MEGA_aquí]`, m, { contextInfo, quoted: m });
         }
 
         const file = File.fromURL(text);
