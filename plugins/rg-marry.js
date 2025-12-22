@@ -54,8 +54,8 @@ const handler = async (m, { conn, command, usedPrefix }) => {
             const proposerName = conn.getName(proposer);
             const proposeeName = conn.getName(proposee);
             
-            // Mensaje actualizado pidiendo "Aceptar"
-            const confirmationMessage = `♡ ${proposerName} te ha propuesto matrimonio, ${proposeeName}. ¿Aceptas? •(=^●ω●^=)•\n\n*Responde con:*\n> ✐ "Aceptar" para confirmar\n> ✐ "No" para rechazar.`;
+            // Mensaje actualizado pidiendo "Acepto" o "No acepto"
+            const confirmationMessage = `♡ ${proposerName} te ha propuesto matrimonio, ${proposeeName}. ¿Aceptas? •(=^●ω●^=)•\n\n*Responde con:*\n> ✐ "Acepto" para confirmar\n> ✐ "No acepto" para rechazar.`;
             
             await conn.reply(m.chat, confirmationMessage, m, { mentions: [proposee, proposer] });
 
@@ -96,14 +96,15 @@ handler.before = async (m) => {
     const { proposer, timeout } = confirmation[m.sender];
     const text = m.text.toLowerCase().trim();
 
-    if (text === 'no') {
+    // Detección de "No acepto"
+    if (text === 'no acepto') {
         clearTimeout(timeout);
         delete confirmation[m.sender];
-        return conn.reply(m.chat, '*《✧》 Han rechazado la propuesta de matrimonio.*', m);
+        return conn.reply(m.chat, '*《✧》 Han rechazado la propuesta de matrimonio (No acepto).*', m);
     }
 
-    // Cambio aquí: ahora detecta "aceptar"
-    if (text === 'aceptar') {
+    // Detección de "Acepto"
+    if (text === 'acepto') {
         clearTimeout(timeout);
         
         marriages[proposer] = m.sender;
