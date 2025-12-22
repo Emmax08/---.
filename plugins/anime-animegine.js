@@ -1,8 +1,8 @@
 import translate from '@vitalets/google-translate-api';
 import fetch from 'node-fetch';
 
-const newsletterJid = '120363335626706839@newsletter';
-const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡『 𝐓͢ᴇ𝙖፝ᴍ⃨ 𝘾𝒉꯭𝐚𝑛𝑛𝒆𝑙: 𝑹ᴜ⃜ɓ𝑦-𝑯ᴏ𝒔𝑯𝙞꯭𝑛𝒐 』࿐⟡';
+const newsletterJid = '120363422454443738@newsletter';
+const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡『 𝗩𝗢𝗥𝗧𝗘-𝗫𝗡® 𝗖𝗟𝗨𝗕 』࿐⟡';
 
 let handler = async (m, { conn, args, usedPrefix, command }) => {
   const contextInfo = {
@@ -28,7 +28,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
   if (!prompt) {
     return conn.reply(
       m.chat,
-      `🌸 *Onii-chan~ dime qué imagen deseas crear con texto...* (◕‿◕✿)\n\n🌼 *Ejemplo:* \n\`${usedPrefix + command} Un dragón azul volando sobre montañas nevadas\``,
+      `🌸 *Perra inservible ~ dime qué imagen deseas crear con texto...* (◕‿◕✿)\n\n🌼 *Ejemplo:* \n\`${usedPrefix + command} Un dragón azul volando sobre montañas nevadas\``,
       m,
       { contextInfo, quoted: m }
     );
