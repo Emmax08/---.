@@ -31,20 +31,20 @@ let handler = async (m, { conn, usedPrefix, command }) => {
 
   let grupos = `*Hola!, te invito a unirte a los grupos oficiales del Bot para convivir con la comunidad.....*
 
-- ${namegrupo}
-> *❀* ${gp1}
+- *Grupo Oficial 1*
+> *❀* https://chat.whatsapp.com/EPGD4RU9O9v2r01oKWQD0M
 
-${namecomu}
-> *❀* ${comunidad1}
+- *Grupo Oficial 2*
+> *❀* https://chat.whatsapp.com/Itu4OFTwURkFM06QtTAsDf
 
 *ׄ─ׄ⭒─ׄ─ׅ─ׄ⭒─ׄ─ׅ─ׄ⭒─ׄ─ׅ─ׄ⭒─ׄ─ׅ─ׄ⭒─ׄ*
 
-⚘ Enlace anulado? entre aquí! 
+⚘ Canal Oficial (Noticias y actualizaciones): 
 
-- ${namechannel}
-> *❀* ${channel}
+- *Canal del Bot*
+> *❀* https://whatsapp.com/channel/0029Vb7k5xx1yT2CmKOz4n1k
 
-> ${dev}`;
+> *Desarrollador:* ${dev || 'No especificado'}`;
 
   // Se envía la imagen aleatoria con el texto.
   await conn.sendFile(m.chat, randomImageURL, "grupos.jpg", grupos, m);
