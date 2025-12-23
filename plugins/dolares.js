@@ -1,46 +1,30 @@
-const axios = require('axios');
-
-// Escuchador de mensajes
 client.on('message', async (msg) => {
-    // Extraer el prefijo (. o #)
-    const prefijo = msg.body.charAt(0);
-    
-    // Validar si el mensaje inicia con tus prefijos guardados
-    if (prefijo === '.' || prefijo === '#') {
-        
-        // Obtener el comando (ej: "dolar")
-        const args = msg.body.slice(1).trim().split(/ +/);
-        const comando = args.shift().toLowerCase();
+    // 1. Capturamos el contenido del mensaje
+    const texto = msg.body;
 
-        // --- LÓGICA DEL COMANDO DOLAR ---
-        if (comando === 'dolar') {
-            try {
-                // API Key de https://www.exchangerate-api.com/
-                const API_KEY = 'TU_API_KEY_AQUÍ'; 
-                const url = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`;
-                
-                const response = await axios.get(url);
-                const rates = response.data.conversion_rates;
+    // 2. Verificamos que no esté vacío y que empiece con tus prefijos (. o #)
+    if (!texto || !['.', '#'].includes(texto[0])) return;
 
-                // Armamos la lista de monedas
-                const listaPrecios = `
-💵 *TIPO DE CAMBIO (1 USD)* 💵
+    // 3. Separamos el prefijo, el comando y los argumentos
+    const prefijo = texto[0];
+    const args = texto.slice(1).trim().split(/ +/);
+    const comando = args.shift().toLowerCase();
 
-🇪🇺 *Euro:* ${rates.EUR.toFixed(2)}
-🇲🇽 *Peso MX:* ${rates.MXN.toFixed(2)}
-🇨🇴 *Peso CO:* ${rates.COP.toFixed(0)}
-🇦🇷 *Peso AR:* ${rates.ARS.toFixed(2)}
-🇧🇷 *Real BR:* ${rates.BRL.toFixed(2)}
+    // 4. EL COMANDO DOLAR
+    if (comando === 'dolar') {
+        try {
+            const API_KEY = 'TU_API_KEY_AQUÍ'; 
+            const response = await axios.get(`https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`);
+            const rates = response.data.conversion_rates;
 
-✨ *Usa ${prefijo}${comando} para actualizar.*
-                `.trim();
+            const mensaje = `💵 *Precio del Dólar*\n\n🇲🇽 MXN: ${rates.MXN}\n🇪🇺 EUR: ${rates.EUR}\n🇦🇷 ARS: ${rates.ARS}`;
+            
+            // IMPORTANTE: Verifica si tu librería usa 'msg.reply' o 'client.sendMessage'
+            await msg.reply(mensaje); 
 
-                await client.sendMessage(msg.from, { text: listaPrecios });
-
-            } catch (error) {
-                console.error(error);
-                await msg.reply('⚠️ Error al conectar con la API de divisas.');
-            }
+        } catch (e) {
+            console.log("Error en comando dolar:", e);
+            await msg.reply("❌ Error al obtener datos.");
         }
     }
 });
