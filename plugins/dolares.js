@@ -1,44 +1,37 @@
-const axios = require('axios');
+import axios from 'axios'
 
-client.on('message', async (msg) => {
-    // 1. Forzamos que el texto sea un String y quitamos espacios al inicio/final
-    const textoRecibido = (msg.body || "").trim();
-    
-    // 2. Extraemos el primer carácter (Prefijo)
-    const prefijo = textoRecibido.charAt(0);
+let handler = async (m, { conn, usedPrefix, command }) => {
+    // Enviamos un mensaje de "espera"
+    await m.reply('⏳ Consultando el tipo de cambio...')
 
-    // 3. Verificamos si es . o #
-    if (prefijo === '.' || prefijo === '#') {
-        
-        // Extraemos el comando y lo limpiamos totalmente
-        const comando = textoRecibido.slice(1).split(/ +/)[0].toLowerCase().trim();
-        
-        // ESTO APARECERÁ EN TU CONSOLA DE PC (Para saber qué recibe el bot)
-        console.log(`Prefijo detectado: ${prefijo} | Comando: ${comando}`);
+    try {
+        // Usamos una API pública que no requiere Key para evitar errores de configuración
+        const res = await axios.get('https://api.exchangerate-api.com/v4/latest/USD')
+        const rates = res.data.rates
 
-        // 4. Lógica del comando
-        if (comando === 'dolar') {
-            try {
-                // API pública sin necesidad de Key para pruebas
-                const response = await axios.get('https://api.exchangerate-api.com/v4/latest/USD');
-                const rates = response.data.rates;
+        const texto = `
+💵 *VALOR DEL DÓLAR (1 USD)* 💵
 
-                const mensaje = `
-💵 *VALOR DEL DÓLAR*
-_Consultado con prefijo: ${prefijo}_
+🇲🇽 *Peso Mexicano:* ${rates.MXN.toFixed(2)}
+🇦🇷 *Peso Argentino:* ${rates.ARS.toFixed(2)}
+🇨🇴 *Peso Colombiano:* ${rates.COP.toFixed(0)}
+🇵🇪 *Sol Peruano:* ${rates.PEN.toFixed(2)}
+🇪🇺 *Euro:* ${rates.EUR.toFixed(2)}
 
-🇲🇽 MXN: ${rates.MXN.toFixed(2)}
-🇦🇷 ARS: ${rates.ARS.toFixed(2)}
-🇪🇺 EUR: ${rates.EUR.toFixed(2)}
-🇨🇴 COP: ${rates.COP.toFixed(0)}
-                `.trim();
+✨ *Usa ${usedPrefix}${command} para actualizar.*
+`.trim()
 
-                return await msg.reply(mensaje);
+        await conn.reply(m.chat, texto, m)
 
-            } catch (error) {
-                console.error("Error al obtener divisas:", error);
-                return await msg.reply("❌ Error al obtener los precios.");
-            }
-        }
+    } catch (e) {
+        console.error(e)
+        throw `❌ Hubo un error al obtener los datos.`
     }
-});
+}
+
+// Estos son los activadores del comando
+handler.help = ['dolar']
+handler.tags = ['tools']
+handler.command = ['dolar', 'usd', 'divisas'] // Responde a .dolar, .usd y .divisas
+
+export default handler
