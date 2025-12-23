@@ -108,4 +108,52 @@ export async function MariaJadiBot(options) {
                     txtQR = await conn.sendMessage(m.chat, { image: await qrcode.toBuffer(qr, { scale: 8 }), caption: rtx.trim()}, { quoted: m})
                 }
                 if (txtQR && txtQR.key) {
-                    setTimeout(() => { conn.sendMessage(m.sender, { delete:
+                    setTimeout(() => { conn.sendMessage(m.sender, { delete:                if (txtQR && txtQR.key) {
+                    setTimeout(() => { conn.sendMessage(m.chat, { delete: txtQR.key }, { quoted: m }).catch(e => e) }, 45000)
+                }
+            }
+
+            // --- LÓGICA DE CÓDIGO DE VINCULACIÓN ---
+            if (qr && mcode) {
+                txtCode = await conn.sendMessage(m.chat, { text: rtx2.trim() }, { quoted: m })
+                await new Promise(resolve => setTimeout(resolve, 5000)) // Pequeña pausa estética
+                let code = await sock.requestPairingCode(m.sender.split('@')[0])
+                codeBot = await m.reply(code.match(/.{1,4}/g)?.join('-') || code)
+            }
+
+            if (connection === 'open') {
+                sock.isInit = true
+                global.conns.push(sock)
+                await conn.sendMessage(m.chat, { text: `🎙️ *¡ESTAMOS AL AIRE!* 🎙️\n\nLa transmisión se ha enlazado con éxito. Disfruta del espectáculo, querido amigo... ¡JAJAJA!` }, { quoted: m })
+                await new Promise(resolve => setTimeout(resolve, 3000))
+                if (mcode && txtCode) conn.sendMessage(m.chat, { delete: txtCode.key }).catch(e => e)
+                if (codeBot) conn.sendMessage(m.chat, { delete: codeBot.key }).catch(e => e)
+            }
+
+            if (connection === 'close') {
+                let reason = new Boom(lastDisconnect?.error)?.output?.statusCode
+                if (reason === DisconnectReason.restartRequired) {
+                    console.log(chalk.cyan('📻 Reiniciando sintonía...'))
+                    MariaJadiBot(options)
+                } else if (reason === DisconnectReason.loggedOut) {
+                    console.log(chalk.red('📻 El contrato ha terminado (Sesión cerrada).'))
+                    fs.rmSync(pathMariaJadiBot, { recursive: true, force: true })
+                } else {
+                    console.log(chalk.yellow(`📻 Señal perdida: ${reason}. Intentando reconectar...`))
+                    MariaJadiBot(options)
+                }
+            }
+        }
+
+        sock.ev.on('connection.update', connectionUpdate)
+        sock.ev.on('creds.update', saveCreds)
+    })
+}
+
+// --- UTILIDAD DE TIEMPO ---
+function msToTime(duration) {
+    let seconds = Math.floor((duration / 1000) % 60),
+        minutes = Math.floor((duration / (1000 * 60)) % 60)
+    return `${minutes}m ${seconds}s`
+}
+
