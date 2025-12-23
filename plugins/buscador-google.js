@@ -1,8 +1,8 @@
 import fetch from 'node-fetch';
 
 // --- Constantes y Configuración de Transmisión (Estilo Ellen Joe) ---
-const newsletterJid = '120363401893800327@newsletter';
-const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡ mᥲríᥲ k᥆ȷᥙ᥆\'s 𝐒ervice';
+const newsletterJid = '120363406360158608@newsletter';
+const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡ 𝐀𝐋𝐀𝐒𝐓𝐎𝐑\'s 𝐒ervice';
 
 let handler = async (m, { conn, text }) => { // Added conn to params
   const name = conn.getName(m.sender); // Identifying the Proxy
@@ -17,7 +17,7 @@ let handler = async (m, { conn, text }) => { // Added conn to params
       serverMessageId: -1
     },
     externalAdReply: {
-      title: 'mᥲríᥲ k᥆ȷᥙ᥆: Pista localizada. 👑',
+      title: 'alastor: Alma localizada. ✡️',
       body: `Procesando solicitud para el/la Proxy ${name}...`,
       thumbnail: icons, // Ensure 'icons' and 'redes' are globally defined
       sourceUrl: redes,
@@ -27,7 +27,7 @@ let handler = async (m, { conn, text }) => { // Added conn to params
   };
 
   if (!text) {
-    return conn.reply(m.chat, `🌸 *Rastro frío, Proxy ${name}.* Necesito un término de búsqueda para iniciar el barrido en Google.`, m, { contextInfo, quoted: m });
+    return conn.reply(m.chat, `🖤 *Rastro frío, Proxy ${name}.* Necesito un término de búsqueda para iniciar el barrido en Google.`, m, { contextInfo, quoted: m });
   }
 
   m.react('🔄'); // Processing reaction
