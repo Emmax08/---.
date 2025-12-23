@@ -58,10 +58,10 @@ let handler = async (m, { conn }) => {
    ✨ *¡UN NUEVO INVITADO AL AIRE!* ✨
 ━━━━━━━━━━━━━━━━━━━━
 
-📻 *NOMBRE:* _${randomCharacter.name}_
-🎭 *GÉNERO:* _${randomCharacter.gender}_
-💰 *VALOR:* _${randomCharacter.value} Almas_
-📂 *FUENTE:* _${randomCharacter.source}_
+📻 𝑁𝑂𝑀𝐵𝑅𝐸: *${randomCharacter.name}
+🎭 𝐺𝐸𝑁𝐸𝑅𝑂: *${randomCharacter.gender
+💰 𝑉𝐴𝐿𝑂𝑅: *${randomCharacter.value
+📂 𝐹𝑈𝐸𝑁𝑇𝐸: *${randomCharacter.source
 🔖 𝙄𝘿: *${randomCharacter.id}*
 
 ⚖️ *ESTADO:* ${statusMessage}
