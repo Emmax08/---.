@@ -1,45 +1,33 @@
 import Tesseract from 'tesseract.js'
 
 let handler = async (m, { conn, usedPrefix, command }) => {
-    // 1. Verificamos si el usuario respondió a una imagen o envió una con el comando
     let q = m.quoted ? m.quoted : m
     let mime = (q.msg || q).mimetype || ''
 
-    if (!/image/.test(mime)) throw `*⚠️ Responde a una imagen o envíala con el comando ${usedPrefix}${command} para leer su contenido.*`
+    if (!/image/.test(mime)) throw `*⚠️ Responde a una imagen con ${usedPrefix}${command}*`
 
-    await m.reply('⏳ Leyendo el texto de la imagen... Esto puede tardar unos segundos.')
+    // Mensaje de espera
+    await conn.sendMessage(m.chat, { text: '⏳ Leyendo imagen...' }, { quoted: m })
 
     try {
-        // 2. Descargamos la imagen del mensaje
-        let img = await q.download()
+        // DESCARGA: Esta es la forma más compatible en plugins
+        let img = await q.download?.()
+        if (!img) img = await conn.downloadMediaMessage(q)
 
-        // 3. Procesamos la imagen con Tesseract (idioma español + inglés)
-        const { data: { text } } = await Tesseract.recognize(img, 'spa+eng', {
-            // logger: m => console.log(m) // Opcional: para ver el progreso en consola
-        })
+        const { data: { text } } = await Tesseract.recognize(img, 'spa+eng')
 
-        // 4. Verificamos si se encontró texto
-        if (!text || text.trim().length === 0) {
-            return m.reply('❌ No pude encontrar ningún texto legible en esta imagen.')
-        }
+        if (!text.trim()) throw '❌ No encontré texto.'
 
-        let respuesta = `
-📖 *TEXTO EXTRAÍDO* 📖
-────────────────
-${text.trim()}
-────────────────
-`.trim()
-
-        await m.reply(respuesta)
+        await conn.reply(m.chat, `📖 *TEXTO:* \n\n${text.trim()}`, m)
 
     } catch (e) {
         console.error(e)
-        throw `*❌ Error:* Ocurrió un fallo al procesar la imagen. Asegúrate de que la foto sea clara.`
+        m.reply('❌ Error al procesar. Verifica que la librería tesseract.js esté instalada.')
     }
 }
 
 handler.help = ['ocr']
 handler.tags = ['tools']
-handler.command = ['ocr', 'leer', 'extraer'] 
+handler.command = /^(ocr|leer)$/i // Esto acepta .ocr o .leer sin importar mayúsculas
 
 export default handler
