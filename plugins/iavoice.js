@@ -1,43 +1,30 @@
-import gtts from 'node-gtts'
-import { readFileSync, unlinkSync } from 'fs'
-import { join } from 'path'
+import fetch from 'node-fetch'
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-    // Si no hay texto, explicamos cómo usarlo
-    if (!text) throw `*⚠️ Ejemplo de uso:*\n\n${usedPrefix + command} es Hola, ¿cómo estás?\n\n*Idiomas:* es (Español), en (Inglés), ja (Japonés), fr (Francés)`
+    if (!text) throw `*⚠️ Ejemplo de uso:*\n\n${usedPrefix + command} Hola como estas?`
 
-    // Separamos el idioma del mensaje (ej: "es Hola" -> lang: es, mensaje: Hola)
-    let lang = text.split(' ')[0]
-    let mensaje = text.slice(lang.length).trim()
+    let lang = 'es' // Idioma por defecto
+    let textToSay = text
 
-    // Si el usuario no pone el idioma primero, usamos español por defecto
-    if (lang.length !== 2) {
-        lang = 'es'
-        mensaje = text
+    // Si quieres cambiar idioma (ej: .voz en Hello)
+    if (text.startsWith('en ')) {
+        lang = 'en'
+        textToSay = text.slice(3)
     }
 
     try {
-        const tts = gtts(lang)
-        const filePath = join(process.cwd(), 'tmp', `${Date.now()}.wav`)
+        // API directa de Google Translate TTS
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(textToSay)}&tl=${lang}&client=tw-ob`
         
-        // Guardamos el audio temporalmente
-        tts.save(filePath, mensaje, async () => {
-            const audio = readFileSync(filePath)
-            
-            // Enviamos como Nota de Voz (PTT)
-            await conn.sendMessage(m.chat, { 
-                audio: audio, 
-                mimetype: 'audio/mpeg', 
-                ptt: true 
-            }, { quoted: m })
-
-            // Borramos el archivo temporal para no llenar el hosting
-            unlinkSync(filePath)
-        })
+        await conn.sendMessage(m.chat, { 
+            audio: { url: url }, 
+            mimetype: 'audio/mp4', 
+            ptt: true 
+        }, { quoted: m })
 
     } catch (e) {
         console.error(e)
-        m.reply('❌ No pude procesar el audio. Asegúrate de usar un código de idioma válido (es, en, jp).')
+        m.reply('❌ Error al generar el audio.')
     }
 }
 
