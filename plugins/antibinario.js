@@ -1,14 +1,13 @@
 let handler = async (m, { conn, text, usedPrefix, command, isAdmin, isBotAdmin }) => {
-    // LÓGICA DE CONFIGURACIÓN (ON/OFF)
-    if (command) {
-        if (!m.isGroup) return
+    // 1. LÓGICA DE CONFIGURACIÓN (Comando manual)
+    if (m.isGroup && (command === 'antibinario' || command === 'antibinarios')) {
         if (!isAdmin) return await conn.reply(m.chat, '🎙️ *¡JAJAJA! Solo los directores de la estación (admins) pueden cambiar esta frecuencia.*', m)
 
         let chat = global.db.data.chats[m.chat]
-        let isEnable = /true|enable|(on)/i.test(text)
-        let isDisable = /false|disable|(off)/i.test(text)
-
         if (!text) return await conn.reply(m.chat, `🎙️ *¿Qué deseas hacer con la frecuencia?*\n\nUso correcto:\n*${usedPrefix + command} on*\n*${usedPrefix + command} off*`, m)
+
+        let isEnable = /on|true|enable/i.test(text)
+        let isDisable = /off|false|disable/i.test(text)
 
         if (isEnable) {
             chat.antibinario = true
@@ -20,15 +19,18 @@ let handler = async (m, { conn, text, usedPrefix, command, isAdmin, isBotAdmin }
     }
 }
 
-// LÓGICA DE DETECCIÓN (Se ejecuta antes de cada mensaje)
+// 2. LÓGICA DE DETECCIÓN AUTOMÁTICA
 handler.before = async function (m, { conn, isAdmin, isBotAdmin }) {
     if (!m.isGroup) return
     
+    // Verificación de base de datos
     let chat = global.db.data.chats[m.chat]
-    if (!chat || !chat.antibinario) return // Si no existe en DB o está en 'off', ignorar
+    if (!chat || !chat.antibinario) return 
     
-    if (isAdmin || !isBotAdmin) return // No afecta a admins, el bot debe ser admin para borrar
+    // Ignorar si el bot no es admin o si el que envía es admin
+    if (isAdmin || !isBotAdmin) return 
 
+    // Límite de seguridad: 5000 caracteres
     const charLimit = 5000 
     
     if (m.text && m.text.length > charLimit) {
