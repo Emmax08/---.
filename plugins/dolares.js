@@ -1,34 +1,46 @@
 const axios = require('axios');
 
-// Puedes obtener una key gratuita en https://www.exchangerate-api.com/
-const API_KEY = 'TU_API_KEY_AQUÍ'; 
-const BASE_URL = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`;
+// Escuchador de mensajes
+client.on('message', async (msg) => {
+    // Extraer el prefijo (. o #)
+    const prefijo = msg.body.charAt(0);
+    
+    // Validar si el mensaje inicia con tus prefijos guardados
+    if (prefijo === '.' || prefijo === '#') {
+        
+        // Obtener el comando (ej: "dolar")
+        const args = msg.body.slice(1).trim().split(/ +/);
+        const comando = args.shift().toLowerCase();
 
-async function comandoDolar(client, message) {
-    try {
-        // Obtenemos los cambios basados en el Dólar (USD)
-        const response = await axios.get(BASE_URL);
-        const rates = response.data.conversion_rates;
+        // --- LÓGICA DEL COMANDO DOLAR ---
+        if (comando === 'dolar') {
+            try {
+                // API Key de https://www.exchangerate-api.com/
+                const API_KEY = 'TU_API_KEY_AQUÍ'; 
+                const url = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`;
+                
+                const response = await axios.get(url);
+                const rates = response.data.conversion_rates;
 
-        // Seleccionamos las monedas más relevantes (puedes añadir las de tu país)
-        const blue = rates['ARS'] ? `\n🇦🇷 *Peso Arg:* ${(rates['ARS']).toFixed(2)}` : '';
-        const mxn = rates['MXN'] ? `\n🇲🇽 *Peso Mex:* ${(rates['MXN']).toFixed(2)}` : '';
-        const cop = rates['COP'] ? `\n🇨🇴 *Peso Col:* ${(rates['COP']).toFixed(2)}` : '';
-        const eur = rates['EUR'] ? `\n🇪🇺 *Euro:* ${(rates['EUR']).toFixed(2)}` : '';
-        const brl = rates['BRL'] ? `\n🇧🇷 *Real:* ${(rates['BRL']).toFixed(2)}` : '';
+                // Armamos la lista de monedas
+                const listaPrecios = `
+💵 *TIPO DE CAMBIO (1 USD)* 💵
 
-        const textoDolar = `
-💵 *VALOR DEL DÓLAR (1 USD)* 💵
+🇪🇺 *Euro:* ${rates.EUR.toFixed(2)}
+🇲🇽 *Peso MX:* ${rates.MXN.toFixed(2)}
+🇨🇴 *Peso CO:* ${rates.COP.toFixed(0)}
+🇦🇷 *Peso AR:* ${rates.ARS.toFixed(2)}
+🇧🇷 *Real BR:* ${rates.BRL.toFixed(2)}
 
-${eur}${mxn}${cop}${ars}${brl}
+✨ *Usa ${prefijo}${comando} para actualizar.*
+                `.trim();
 
-✨ *Actualizado:* ${new Date().toLocaleDateString()}
-        `.trim();
+                await client.sendMessage(msg.from, { text: listaPrecios });
 
-        await client.sendMessage(message.from, { text: textoDolar });
-
-    } catch (error) {
-        console.error(error);
-        message.reply('⚠️ No se pudo obtener el tipo de cambio en este momento.');
+            } catch (error) {
+                console.error(error);
+                await msg.reply('⚠️ Error al conectar con la API de divisas.');
+            }
+        }
     }
-}
+});
