@@ -52,7 +52,7 @@ let handler = async (m, { conn }) => {
         
         const statusMessage = randomCharacter.user 
             ? `Bajo contrato de @${randomCharacter.user.split('@')[0]} 🍎` 
-            : '¡Libre para ser reclamada! 💎'
+            : '¡Libre para ser reclamada! ✡️'
 
         const message = `🎙️ 📻 ━━━━━━━ • 🦌 • ━━━━━━━ 📻 🎙️
    ✨ *¡UN NUEVO INVITADO AL AIRE!* ✨
