@@ -1,46 +1,48 @@
-// plugins.js - Comando .animesprox o #animesprox
+import axios from 'axios'
 
-const axios = require('axios');
-
-async function handleCommand(client, message) {
-    const text = message.body;
+let handler = async (m, { conn, usedPrefix, command }) => {
+    const currentYear = new Date().getFullYear()
     
-    // Verificamos si el mensaje empieza con .animesprox o #animesprox
-    if (text.startsWith('.animesprox') || text.startsWith('#animesprox')) {
-        const currentYear = new Date().getFullYear();
-        
-        try {
-            // Consultamos la API de Jikan para la temporada actual/próxima
-            // 'upcoming' nos trae los animes que están por salir
-            const response = await axios.get(`https://api.jikan.moe/v4/seasons/upcoming`);
-            const animes = response.data.data.slice(0, 10); // Limitamos a los 10 más populares
+    // Enviamos un mensaje de espera
+    m.reply('_Cargando próximos estrenos de anime..._')
 
-            if (!animes || animes.length === 0) {
-                return client.sendMessage(message.from, `No encontré próximos estrenos para el ${currentYear}.`);
-            }
+    try {
+        // Consultamos la API de Jikan para los próximos estrenos (upcoming)
+        const response = await axios.get(`https://api.jikan.moe/v4/seasons/upcoming`)
+        const animes = response.data.data.slice(0, 12) // Limitamos a 12 resultados
 
-            let responseText = `📅 *Próximos Estrenos de Anime - ${currentYear}*\n\n`;
-
-            animes.forEach((anime, index) => {
-                const title = anime.title_latin-american || anime.title;
-                const type = anime.type || 'TV';
-                const date = anime.aired.string || 'Por anunciar';
-                
-                responseText += `*${index + 1}. ${title}*\n`;
-                responseText += `🔹 Tipo: ${type}\n`;
-                responseText += `📅 Fecha: ${date}\n`;
-                responseText += `🔗 Más info: ${anime.url}\n\n`;
-            });
-
-            responseText += `_Fuente: MyAnimeList (vía Jikan API)_`;
-
-            await client.sendMessage(message.from, responseText);
-
-        } catch (error) {
-            console.error("Error al obtener animes:", error);
-            await client.sendMessage(message.from, "❌ Hubo un error al conectar con la base de datos de anime.");
+        if (!animes || animes.length === 0) {
+            return m.reply(`No se encontraron próximos estrenos para el año ${currentYear}.`)
         }
+
+        let txt = `📅 *PRÓXIMOS ANIMES (${currentYear})*\n\n`
+
+        for (let anime of animes) {
+            let titulo = anime.title_english || anime.title
+            let temporada = anime.season ? anime.season.toUpperCase() : 'PENDIENTE'
+            
+            txt += `⭐ *${titulo}*\n`
+            txt += `🔹 *Tipo:* ${anime.type || 'TV'}\n`
+            txt += `🕒 *Temporada:* ${temporada} ${anime.year || ''}\n`
+            txt += `🔗 *Link:* ${anime.url}\n`
+            txt += `──────────────────\n\n`
+        }
+
+        txt += `*Utiliza ${usedPrefix}anime <nombre> para buscar uno específico.*`
+
+        // Enviamos el mensaje final
+        await conn.sendMessage(m.chat, { text: txt }, { quoted: m })
+
+    } catch (e) {
+        console.error(e)
+        m.reply('❌ Lo siento, hubo un error al obtener la lista de animes.')
     }
 }
 
-module.exports = { handleCommand };
+// Configuración del handler
+handler.help = ['animesprox']
+handler.tags = ['info', 'entretenimiento']
+// Expresión regular para que funcione con . o # según tus prefijos configurados
+handler.command = /^(animesprox|proximosanimes|estrenosanime)$/i
+
+export default handler
