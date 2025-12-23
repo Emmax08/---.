@@ -42,7 +42,7 @@ let handler = async (m, { conn, text, command }) => {
              `┃Tu salud ${evento.health < 0 ? 'bajó en: ' + Math.abs(evento.health) : 'se mantuvo igual.'}\n` +
              `╰━━━━━━━━━━━━⬣`;
 
-  await conn.sendFile(m.chat, img, 'exploracion.jpg', info, fkontak);
+  await conn.sendFile(m.chat, img, 'https://files.catbox.moe/6b7tfp.jpg', info, fkontak);
 
   global.db.write();
 };
