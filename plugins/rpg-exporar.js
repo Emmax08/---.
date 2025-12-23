@@ -36,20 +36,24 @@ let handler = async (m, { conn, text, command }) => {
   
   cooldowns[senderId] = Date.now();
 
-  let img = 'https://qu.ax/ljzxA.jpg';
+  // Nueva imagen funcional
+  let img = 'https://files.catbox.moe/6b7tfp.jpg'; 
   
-  let info = `╭━〔 Exploración en el Bosque 〕\n` +
-             `┃ Misión: *${evento.nombre}*\n` +
-             `┃ Evento: ${evento.mensaje}\n` +
-             `┃ Recompensa: ${evento.coin >= 0 ? '+' : '-'}${Math.abs(evento.coin)} *${moneda}* y +${evento.exp} *XP*\n` +
-             `┃ Salud: ${users[senderId].health}% ${evento.health < 0 ? '🔻' : '✅'}\n` +
-             `╰━━━━━━━━━━━━⬣`;
+  let info = `╭━〔 Exploración en el Bosque 〕
+┃ Misión: *${evento.nombre}*
+┃ Evento: ${evento.mensaje}
+┃ Recompensa: ${evento.coin >= 0 ? '+' : '-'}${Math.abs(evento.coin)} *${moneda}* y +${evento.exp} *XP*
+┃ Salud: ${users[senderId].health}% ${evento.health < 0 ? '🔻' : '✅'}
+╰━━━━━━━━━━━━⬣`;
 
-  // CAMBIO CLAVE: Usamos sendMessage con el tipo 'image' para forzar el renderizado
-  await conn.sendMessage(m.chat, { 
-    image: { url: img }, 
-    caption: info 
-  }, { quoted: m });
+  try {
+    // Intenta enviar la imagen
+    await conn.sendMessage(m.chat, { image: { url: img }, caption: info }, { quoted: m });
+  } catch (e) {
+    // Si la imagen falla (404), envía solo el texto para no dar error
+    console.error("Error al enviar imagen:", e);
+    await m.reply(info);
+  }
 
   global.db.write();
 };
