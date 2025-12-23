@@ -1,22 +1,26 @@
-let handler = async (m, { conn, text, usedPrefix, command }) => {
+let handler = async (m, { conn, text, usedPrefix, command, participants }) => {
     if (!m.isGroup) throw '*⚠️ Este comando solo sirve en grupos.*'
     
-    // Verificamos si es admin el que lo usa
-    let participants = (await conn.groupMetadata(m.chat)).participants
-    let isAdmin = participants.find(p => p.id === m.sender)?.admin
-    if (!isAdmin) throw '*❌ Solo los administradores pueden usar este comando.*'
+    // 1. Obtenemos la lista de admins de forma más segura
+    const admins = participants.filter(p => p.admin !== null).map(p => p.id)
+    
+    // 2. Verificamos si el que escribe es admin o el dueño del bot
+    const esAdmin = admins.includes(m.sender)
+    const esOwner = global.opts['owner'] || [conn.user.jid].includes(m.sender) // Ajuste según tu base
 
-    if (!text) throw `*⚠️ Uso correcto:* ${usedPrefix}${command} [on/off]\n\n*Ejemplo:* ${usedPrefix}${command} on`
+    if (!esAdmin && !esOwner) throw '*❌ Error: Solo los administradores pueden usar este comando.*'
+
+    if (!text) throw `*⚠️ Uso correcto:* ${usedPrefix}${command} [on/off]`
 
     let segundos;
     if (text.toLowerCase() === 'on') {
-        segundos = 30; // Tiempo por defecto cuando se activa
+        segundos = 30; 
     } else if (text.toLowerCase() === 'off') {
-        segundos = 0; // Desactivado
+        segundos = 0; 
     } else if (!isNaN(text)) {
-        segundos = parseInt(text); // Permite también poner un número personalizado
+        segundos = parseInt(text);
     } else {
-        throw `*⚠️ Opción inválida.* Usa *${usedPrefix}${command} on* o *off*.`
+        throw `*⚠️ Usa:* ${usedPrefix}${command} on | off`
     }
 
     try {
@@ -35,15 +39,11 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
             }]
         })
 
-        if (segundos > 0) {
-            await m.reply(`✅ *Modo lento activado:* Los miembros deben esperar *${segundos} segundos* entre mensajes.`)
-        } else {
-            await m.reply(`✅ *Modo lento desactivado.*`)
-        }
+        await m.reply(`✅ *Modo lento ${segundos > 0 ? 'activado (' + segundos + 's)' : 'desactivado'}* con éxito.`)
 
     } catch (e) {
         console.error(e)
-        throw '*❌ Error:* El bot debe ser administrador para cambiar esta configuración.'
+        throw '*❌ Error:* Asegúrate de que el bot sea administrador del grupo.'
     }
 }
 
