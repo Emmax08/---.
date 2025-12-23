@@ -6,28 +6,28 @@ let handler = async (m, { conn, usedPrefix, command }) => {
 
     if (!/image/.test(mime)) throw `*⚠️ Responde a una imagen con ${usedPrefix}${command}*`
 
-    // Mensaje de espera
-    await conn.sendMessage(m.chat, { text: '⏳ Leyendo imagen...' }, { quoted: m })
+    await m.reply('⏳ Leyendo texto, por favor espera...')
 
     try {
-        // DESCARGA: Esta es la forma más compatible en plugins
-        let img = await q.download?.()
+        // Intentar descargar el medio de dos formas diferentes para asegurar compatibilidad
+        let img = await q.download?.() 
         if (!img) img = await conn.downloadMediaMessage(q)
 
         const { data: { text } } = await Tesseract.recognize(img, 'spa+eng')
 
-        if (!text.trim()) throw '❌ No encontré texto.'
+        if (!text || text.trim().length < 1) throw '❌ No se encontró texto en la imagen.'
 
-        await conn.reply(m.chat, `📖 *TEXTO:* \n\n${text.trim()}`, m)
+        await conn.reply(m.chat, `📖 *TEXTO EXTRAÍDO:* \n\n${text.trim()}`, m)
 
     } catch (e) {
         console.error(e)
-        m.reply('❌ Error al procesar. Verifica que la librería tesseract.js esté instalada.')
+        m.reply('❌ Error: Asegúrate de que instalaste la librería con "npm install tesseract.js"')
     }
 }
 
 handler.help = ['ocr']
 handler.tags = ['tools']
-handler.command = /^(ocr|leer)$/i // Esto acepta .ocr o .leer sin importar mayúsculas
+// Usamos una expresión regular para que el bot lo detecte sí o sí
+handler.command = /^(ocr|leer|extraer)$/i 
 
 export default handler
