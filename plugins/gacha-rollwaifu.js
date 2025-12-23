@@ -62,7 +62,7 @@ let handler = async (m, { conn }) => {
 🎭 *GÉNERO:* _${randomCharacter.gender}_
 💰 *VALOR:* _${randomCharacter.value} Almas_
 📂 *FUENTE:* _${randomCharacter.source}_
-🔖 *ID:* _${randomCharacter.id}_
+🔖 𝙄𝘿: *${randomCharacter.id}*
 
 ⚖️ *ESTADO:* ${statusMessage}
 
