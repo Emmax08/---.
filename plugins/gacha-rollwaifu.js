@@ -10,7 +10,7 @@ async function loadCharacters() {
         const data = await fs.readFile(charactersFilePath, 'utf-8')
         return JSON.parse(data)
     } catch (error) {
-        throw new Error('❀ No se pudo cargar el archivo characters.json.')
+        throw new Error('🎙️ La señal se perdió. No pude leer los archivos del programa.')
     }
 }
 
@@ -18,7 +18,7 @@ async function saveCharacters(characters) {
     try {
         await fs.writeFile(charactersFilePath, JSON.stringify(characters, null, 2), 'utf-8')
     } catch (error) {
-        throw new Error('❀ No se pudo guardar el archivo characters.json.')
+        throw new Error('🎙️ Hubo un error al guardar este contrato.')
     }
 }
 
@@ -31,14 +31,6 @@ async function loadHarem() {
     }
 }
 
-async function saveHarem(harem) {
-    try {
-        await fs.writeFile(haremFilePath, JSON.stringify(harem, null, 2), 'utf-8')
-    } catch (error) {
-        throw new Error('❀ No se pudo guardar el archivo harem.json.')
-    }
-}
-
 let handler = async (m, { conn }) => {
     const userId = m.sender
     const now = Date.now()
@@ -47,7 +39,7 @@ let handler = async (m, { conn }) => {
         const remainingTime = Math.ceil((cooldowns[userId] - now) / 1000)
         const minutes = Math.floor(remainingTime / 60)
         const seconds = remainingTime % 60
-        return await conn.reply(m.chat, `( ⸝⸝･̆⤚･̆⸝⸝) ¡𝗗𝗲𝗯𝗲𝘀 𝗲𝘀𝗽𝗲𝗿𝗮𝗿 *${minutes} minutos y ${seconds} segundos* 𝗽𝗮𝗿𝗮 𝘃𝗼𝗹𝘃𝗲𝗿  𝘂𝘀𝗮𝗿 *#rw* 𝗱𝗲 𝗻𝘂𝗲𝘃𝗼.`, m)
+        return await conn.reply(m.chat, `🎙️ *¡JAJAJA! ¡Qué impaciencia, querido!*\nLa radio necesita tiempo para enfriarse. Vuelve en *${minutes}m ${seconds}s* para sintonizar a otra alma. 📻✨`, m)
     }
 
     try {
@@ -57,33 +49,38 @@ let handler = async (m, { conn }) => {
 
         const harem = await loadHarem()
         const userEntry = harem.find(entry => entry.characterId === randomCharacter.id)
+        
         const statusMessage = randomCharacter.user 
-            ? `Reclamado por @${randomCharacter.user.split('@')[0]}` 
-            : 'Libre'
+            ? `Bajo contrato de @${randomCharacter.user.split('@')[0]} 🍎` 
+            : '¡Libre para ser reclamada! 💎'
 
-        const message = `╔◡❦︎┅•.⊹☾︎︵ࣾ᷼ ׁ𖥓┅╲۪ ⦙᷼͝👹⦙ ׅ╱ׅ╍𖥓 ︵ࣾ᷼︵ׄׄ᷼☽︎⊹◡╗
-┋  ⣿̶ֻ〪ׅ⃕݊⃧☠️⃚̶̸͝ᤢ֠◌ִ̲  𝑪𝑯𝑨𝑹𝑨𝑪𝑻𝑬𝑹 𝑹𝑨𝑵𝑫𝑶𝑴 🐉ꨪ̸⃙ׅᮬֺ๋֢᳟  ┋
-╚◠༒︎┅˙•⊹.⁀𖥓 ׅ╍╲۪ ⦙᷼͝😈᷼͝⦙ ׅ╱ׅ╍𖥓 ◠˙⁀۪ׄ⊹𓆉︎˙◠╝
-꥓໋╭࣭۬═ֽ̥࣪━᜔๋݈☾︎❦︎︵ິּ֙᷼⌒݈᳹᪾̯ ⋮꥓ּ࣭ׄ💀〪ິ᜔໋࣭⋮⌒ໍּ֣ׄ═ᮣໍ࣭ׄ━𑂺᜔໋ت︎♥︎━᜔࣭֙━๋݈═̥࣭۬╮
-> ఌ︎✿̶᮫᮫ְְׅ᳝ׅ᳝᳞᳞࣪᪲࣪֘⣷ׅ᳝࣪ ࣪࣪𖡻ְְׅ᳝ׅׅ࣪࣪֘ᰰ🖤᮫ְׅ᳝࣪᪲⃞̶𝝸𝕝᮫ְ᳝᳝⃨۪۪۪ׅ᳝࣪࣪っְְׅ᳝۪⃨۪۪۪࣪:   𝑁𝑂𝑀𝐵𝑅𝐸: *${randomCharacter.name}*
-> ఌ︎✿̶᮫᮫ְְׅ᳝ׅ᳝᳞᳞࣪᪲࣪֘⣷ׅ᳝࣪ ࣪࣪𖡻ְְׅ᳝ׅׅ࣪࣪֘ᰰ⚡️᮫ְׅ᳝࣪᪲⃞̶𝝸𝕝᮫ְ᳝᳝⃨۪۪۪ׅ᳝࣪࣪っְְׅ᳝۪⃨۪۪۪࣪:  𝐺𝐸𝑁𝐸𝑅𝑂: *${randomCharacter.gender}*
-> ఌ︎✿̶᮫᮫ְְׅ᳝ׅ᳝᳞᳞࣪᪲࣪֘⣷ׅ᳝࣪ ࣪࣪𖡻ְְׅ᳝ׅׅ࣪࣪֘ᰰ💹᮫ְׅ᳝࣪᪲⃞̶𝝸𝕝᮫ְ᳝᳝⃨۪۪۪ׅ᳝࣪࣪っְְׅ᳝۪⃨۪۪۪࣪:   𝑉𝐴𝐿𝑂𝑅: *${randomCharacter.value}*
-> ఌ︎✿̶᮫᮫ְְׅ᳝ׅ᳝᳞᳞࣪᪲࣪֘⣷ׅ᳝࣪ ࣪࣪𖡻ְְׅ᳝ׅׅ࣪࣪֘ᰰ🪄᮫ְׅ᳝࣪᪲⃞̶𝝸𝕝᮫ְ᳝᳝⃨۪۪۪ׅ᳝࣪࣪っְְׅ᳝۪⃨۪۪۪࣪:   𝙀𝘚𝘛𝘈𝘋𝘖: *${statusMessage}
-> ఌ︎✿̶᮫᮫ְְׅ᳝ׅ᳝᳞᳞࣪᪲࣪֘⣷ׅ᳝࣪ ࣪࣪𖡻ְְׅ᳝ׅׅ࣪࣪֘ᰰ📚᮫ְׅ᳝࣪᪲⃞̶𝝸𝕝᮫ְ᳝᳝⃨۪۪۪ׅ᳝࣪࣪っְְׅ᳝۪⃨۪۪۪࣪:   𝐹𝑈𝐸𝑁𝑇𝐸: *${randomCharacter.source}*
-> ఌ︎✿̶᮫᮫ְְׅ᳝ׅ᳝᳞᳞࣪᪲࣪֘⣷ׅ᳝࣪ ࣪࣪𖡻ְְׅ᳝ׅׅ࣪࣪֘ᰰ🆔᮫ְׅ᳝࣪᪲⃞̶𝝸𝕝᮫ְ᳝᳝⃨۪۪۪ׅ᳝࣪࣪っְְׅ᳝۪⃨۪۪۪࣪:   𝙄𝘿: *${randomCharacter.id}*
-꥓໋╰ׅ۬═ֽ̥࣪🝮︎︎︎︎︎︎︎𓁹═𑂺ׄ︵ິּ֙᷼⌒݈᳹᪾̯ ⋮꥓ּ࣭ׄ✡️⋮⌒ໍּ֣ׄ═ᮣໍ࣭ׄ━𑂺᜔꥓໋┉꥓᷼シ︎━๋݈═̥࣭۬╯`
+        const message = `🎙️ 📻 ━━━━━━━ • 🦌 • ━━━━━━━ 📻 🎙️
+   ✨ *¡UN NUEVO INVITADO AL AIRE!* ✨
+━━━━━━━━━━━━━━━━━━━━
 
-        const mentions = userEntry ? [userEntry.userId] : []
+📻 *NOMBRE:* _${randomCharacter.name}_
+🎭 *GÉNERO:* _${randomCharacter.gender}_
+💰 *VALOR:* _${randomCharacter.value} Almas_
+📂 *FUENTE:* _${randomCharacter.source}_
+🔖 *ID:* _${randomCharacter.id}_
+
+⚖️ *ESTADO:* ${statusMessage}
+
+━━━━━━━━━━━━━━━━━━━━
+🎙️ *RECUERDA:* Nunca estás totalmente vestido sin una sonrisa. ¡JAJAJA! 📻✨`.trim()
+
+        const mentions = randomCharacter.user ? [randomCharacter.user] : []
         await conn.sendFile(m.chat, randomImage, `${randomCharacter.name}.jpg`, message, m, { mentions })
 
         if (!randomCharacter.user) {
             await saveCharacters(characters)
         }
 
+        // Cooldown de 15 minutos (personalizado por tu código original)
         cooldowns[userId] = now + 15 * 60 * 1000
 
     } catch (error) {
-        await conn.reply(m.chat, `✘ Error al cargar el personaje: ${error.message}`, m)
+        await conn.reply(m.chat, `📻 *Interferencia detectada:* ${error.message}`, m)
     }
 }
 
