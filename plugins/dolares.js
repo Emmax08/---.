@@ -1,45 +1,44 @@
 const axios = require('axios');
 
 client.on('message', async (msg) => {
-    // 1. Extraer el cuerpo del mensaje
-    const body = msg.body || ""; 
+    // 1. Forzamos que el texto sea un String y quitamos espacios al inicio/final
+    const textoRecibido = (msg.body || "").trim();
     
-    // 2. Verificar si empieza con . o #
-    if (body.startsWith('.') || body.startsWith('#')) {
-        
-        // 3. Separar comando y argumentos correctamente
-        const args = body.slice(1).trim().split(/ +/);
-        const comando = args.shift().toLowerCase();
+    // 2. Extraemos el primer carácter (Prefijo)
+    const prefijo = textoRecibido.charAt(0);
 
-        // --- COMANDO DOLAR ---
+    // 3. Verificamos si es . o #
+    if (prefijo === '.' || prefijo === '#') {
+        
+        // Extraemos el comando y lo limpiamos totalmente
+        const comando = textoRecibido.slice(1).split(/ +/)[0].toLowerCase().trim();
+        
+        // ESTO APARECERÁ EN TU CONSOLA DE PC (Para saber qué recibe el bot)
+        console.log(`Prefijo detectado: ${prefijo} | Comando: ${comando}`);
+
+        // 4. Lógica del comando
         if (comando === 'dolar') {
             try {
-                // Usamos una API que no requiere registro para que pruebes de inmediato
-                const res = await axios.get('https://api.exchangerate-api.com/v4/latest/USD');
-                const rates = res.data.rates;
+                // API pública sin necesidad de Key para pruebas
+                const response = await axios.get('https://api.exchangerate-api.com/v4/latest/USD');
+                const rates = response.data.rates;
 
-                const texto = `
+                const mensaje = `
 💵 *VALOR DEL DÓLAR*
-Base: 1 USD
+_Consultado con prefijo: ${prefijo}_
 
 🇲🇽 MXN: ${rates.MXN.toFixed(2)}
 🇦🇷 ARS: ${rates.ARS.toFixed(2)}
-🇨🇴 COP: ${rates.COP.toFixed(0)}
 🇪🇺 EUR: ${rates.EUR.toFixed(2)}
-🇵🇪 PEN: ${rates.PEN.toFixed(2)}
-
-_Respuesta enviada usando prefijo: ${body[0]}_
+🇨🇴 COP: ${rates.COP.toFixed(0)}
                 `.trim();
 
-                return await msg.reply(texto);
+                return await msg.reply(mensaje);
 
             } catch (error) {
-                console.error("Error en API:", error);
-                return await msg.reply("❌ No pude obtener los precios ahora mismo.");
+                console.error("Error al obtener divisas:", error);
+                return await msg.reply("❌ Error al obtener los precios.");
             }
         }
-
-        // Si llega aquí y no entró al "if (comando === 'dolar')", es que no reconoce la palabra
-        console.log(`Comando detectado pero no programado: ${comando}`);
     }
 });
