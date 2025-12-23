@@ -4,10 +4,9 @@ let handler = async (m, { conn, text, command }) => {
   let users = global.db.data.users;
   let senderId = m.sender;
   
-  // Variables de personalización
   let moneda = global.moneda || 'Coins 🪙';
   let emoji = global.emoji || '🌲';
-  let tiempoEspera = 5 * 60; // 5 minutos
+  let tiempoEspera = 5 * 60; 
 
   if (cooldowns[senderId] && Date.now() - cooldowns[senderId] < tiempoEspera * 1000) {
     let tiempoRestante = segundosAHMS(Math.ceil((cooldowns[senderId] + tiempoEspera * 1000 - Date.now()) / 1000));
@@ -31,26 +30,26 @@ let handler = async (m, { conn, text, command }) => {
 
   let evento = eventos[Math.floor(Math.random() * eventos.length)];
 
-  // Aplicar cambios a la base de datos
   users[senderId].coin = Math.max(0, users[senderId].coin + evento.coin);
   users[senderId].exp += evento.exp;
   users[senderId].health = Math.max(0, users[senderId].health + evento.health);
   
   cooldowns[senderId] = Date.now();
 
-  // URL de la imagen
   let img = 'https://qu.ax/ljzxA.jpg';
   
-  let info = `╭━〔 Exploración en el Bosque 〕
-┃ Misión: *${evento.nombre}*
-┃ Evento: ${evento.mensaje}
-┃ Recompensa: ${evento.coin >= 0 ? '+' : '-'}${Math.abs(evento.coin)} *${moneda}* y +${evento.exp} *XP*
-┃ Salud: ${users[senderId].health}% ${evento.health < 0 ? '🔻' : '✅'}
-╰━━━━━━━━━━━━⬣`;
+  let info = `╭━〔 Exploración en el Bosque 〕\n` +
+             `┃ Misión: *${evento.nombre}*\n` +
+             `┃ Evento: ${evento.mensaje}\n` +
+             `┃ Recompensa: ${evento.coin >= 0 ? '+' : '-'}${Math.abs(evento.coin)} *${moneda}* y +${evento.exp} *XP*\n` +
+             `┃ Salud: ${users[senderId].health}% ${evento.health < 0 ? '🔻' : '✅'}\n` +
+             `╰━━━━━━━━━━━━⬣`;
 
-  // Envío de imagen con texto (caption)
-  // El tercer parámetro 'explorar.jpg' asegura que el bot lo trate como imagen
-  await conn.sendFile(m.chat, img, 'explorar.jpg', info, m);
+  // CAMBIO CLAVE: Usamos sendMessage con el tipo 'image' para forzar el renderizado
+  await conn.sendMessage(m.chat, { 
+    image: { url: img }, 
+    caption: info 
+  }, { quoted: m });
 
   global.db.write();
 };
