@@ -1,60 +1,67 @@
-let handler = async (m, { conn, participants, usedPrefix, command }) => {
-    // 1. Validar la cita
-    if (!m.quoted) {
-        return conn.reply(m.chat, `⚠️ Por favor, cita el mensaje de la persona que deseas expulsar y borrar su historial.`, m);
-    }
+let handler = async (m, { conn, participants, usedPrefix, command, isBotAdmin, isAdmin }) => {
+    // 1. Validaciones de Poder
+    if (!m.chat.endsWith('@g.us')) return 
+    if (!isAdmin && !m.isOwner) return conn.reply(m.chat, '🎙️ 📻 *¡JAJAJA!* Solo los administradores pueden invocar mi poder de limpieza, querido.', m)
+    if (!isBotAdmin) return conn.reply(m.chat, '🎙️ 📻 Necesito ser administrador para borrar rastros y expulsar invitados.', m)
 
-    let userToKick = m.quoted.sender; // Remitente del mensaje citado
-    const MESSAGES_TO_DELETE = 50; // Cantidad de mensajes a buscar y eliminar
+    // 2. Determinar el objetivo (por cita de mensaje)
+    if (!m.quoted) return conn.reply(m.chat, `🎙️ 📻 *¿A quién debo exterminar?* Por favor, cita un mensaje de la persona para borrar su historial y expulsarla.`, m)
+    
+    let userToKick = m.quoted.sender
+    const MESSAGES_TO_DELETE = 50 // Límite de mensajes a borrar
 
-    // --- Protecciones y Validación de usuario ---
-    const groupInfo = await conn.groupMetadata(m.chat);
-    // Uso de optional chaining (?) para mayor seguridad si global.owner no está definido
-    const ownerGroup = groupInfo.owner || m.chat.split`-`[0] + '@s.whatsapp.net';
-    const ownerBot = global.owner?.[0]?.[0] + '@s.whatsapp.net'; 
+    // Protecciones
+    const groupMetadata = await conn.groupMetadata(m.chat)
+    const ownerGroup = groupMetadata.owner || m.chat.split`-`[0] + '@s.whatsapp.net'
+    const ownerBot = (global.owner?.[0]?.[0] || '') + '@s.whatsapp.net'
 
-    if (userToKick === conn.user.jid) {
-        return conn.reply(m.chat, `❌ No puedo eliminar el bot del grupo.`, m);
-    }
-    if (userToKick === ownerGroup || userToKick === ownerBot) {
-        return conn.reply(m.chat, `❌ No puedo eliminar al propietario del grupo ni al propietario del bot.`, m);
-    }
+    if (userToKick === conn.user.jid) return conn.reply(m.chat, `❌ No puedo eliminarme a mí mismo.`, m)
+    if (userToKick === ownerGroup || userToKick === ownerBot) return conn.reply(m.chat, `❌ Este usuario es demasiado poderoso para ser borrado.`, m)
 
-    // --- 2. Buscar y Eliminar Mensajes (Lógica con Placeholder) ---
-    conn.reply(m.chat, `⏳ Buscando y eliminando los últimos ${MESSAGES_TO_DELETE} mensajes enviados por ${userToKick.split('@')[0]}...`, m);
+    await m.reply(`🎙️ 📻 *INICIANDO LIMPIEZA...*\n\nBorrando los últimos mensajes de @${userToKick.split('@')[0]} y procediendo a su expulsión.`, null, { mentions: [userToKick] })
 
     try {
-        // !!! ATENCIÓN: Esta función 'conn.fetchMessages' es un PLACEHOLDER.
-        // Reemplaza esta línea con el método real que tu librería usa para obtener el historial.
-        let messages = await conn.fetchMessages(m.chat, { 
-            limit: MESSAGES_TO_DELETE * 2, 
-            before: m.id 
-        });
+        // 3. Carga de mensajes para borrar
+        // En Baileys, esto busca en los mensajes cargados en la sesión actual
+        let messages = await conn.loadMessages(m.chat, 100) 
+        let deletedCount = 0
 
-        let deletedCount = 0;
-        
         for (let msg of messages) {
-            // Verifica que el mensaje sea del usuario objetivo
-            if (msg.key && msg.key.participant === userToKick) {
-                // Intenta eliminar el mensaje
-                await conn.sendMessage(m.chat, { 
-                    delete: msg.key 
-                });
-                deletedCount++;
-
-                if (deletedCount >= MESSAGES_TO_DELETE) break;
+            // Verificamos que el mensaje sea del usuario citado
+            if (msg.key && (msg.key.participant === userToKick || msg.participant === userToKick)) {
+                await conn.sendMessage(m.chat, { delete: msg.key })
+                deletedCount++
+                if (deletedCount >= MESSAGES_TO_DELETE) break
             }
         }
 
-        conn.reply(m.chat, `✅ Se eliminaron ${deletedCount} mensajes de ${userToKick.split('@')[0]}.`, m);
-        
+        // 4. Expulsión
+        await conn.groupParticipantsUpdate(m.chat, [userToKick], 'remove')
+
+        // 5. Respuesta Final Estilo Alastor
+        let textoFinal = `🎙️ 📻 ━━━━━━━ • 🦌 • ━━━━━━━ 📻 🎙️\n`
+        textoFinal += `✨ *USUARIO EXTERMINADO* ✨\n`
+        textoFinal += `━━━━━━━━━━━━━━━━━━━━\n\n`
+        textoFinal += `👤 *OBJETIVO:* @${userToKick.split('@')[0]}\n`
+        textoFinal += `🗑️ *MENSAJES BORRADOS:* ${deletedCount}\n`
+        textoFinal += `🚪 *ESTADO:* Eliminado del hotel.\n\n`
+        textoFinal += `🎙️ ¡Qué placer es el silencio! ¡Nunca dejes de sonreír! 📻✨`
+
+        await conn.reply(m.chat, textoFinal, m, { mentions: [userToKick] })
+
     } catch (e) {
-        console.error("Error al buscar/eliminar mensajes:", e);
-        conn.reply(m.chat, `⚠️ Hubo un error al intentar eliminar los mensajes. Procediendo solo con la expulsión.`, m);
+        console.error(e)
+        // Si el borrado falla por falta de mensajes en memoria, al menos lo saca
+        await conn.groupParticipantsUpdate(m.chat, [userToKick], 'remove')
+        await conn.reply(m.chat, `🎙️ 📻 Hubo interferencia con los mensajes, pero el usuario ha sido expulsado exitosamente.`, m)
     }
+}
 
-    // --- 3. Ejecutar Expulsión ---
-    await conn.groupParticipantsUpdate(m.chat, [userToKick], 'remove');
+handler.help = ['kickdel']
+handler.tags = ['group']
+handler.command = ['kickdel', 'kickdelete', 'sacaryborrar'] 
+handler.group = true
+handler.admin = true
+handler.botAdmin = true
 
-    // --- 4. Confirmación Final ---
-    conn.reply(m.chat, `🚫 ¡Usuario ${userToKick.split('@')[0]} expulsado con éxito!`,
+export default handler
