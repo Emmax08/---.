@@ -1,59 +1,80 @@
 /**
  * Comando: .explorar o #explorar
- * Temática: Minecraft en el Infierno de Hazbin Hotel
+ * Temática: Minecraft x Hazbin Hotel (CON BOTÍN MÍTICO)
  */
 
-const handler = async (m, { conn, command, usedPrefix }) => {
-    // Probabilidades
-    const chanceRedencionEnd = 0.001; // 0.1% El "Juego Pasado"
-    const chanceMineriaExitosa = 0.35; // 35% de éxito normal
+const handler = async (m, { conn, usedPrefix }) => {
+    const random = Math.random() * 100; // Trabajamos sobre 100 para manejar mejor los decimales
     
-    const random = Math.random();
+    // Configuración de Probabilidades (Escala 0 - 100)
+    const chanceMitico = 0.0001;    // 0.0001% (Casi imposible)
+    const chanceLegendario = 0.1;   // 0.1% 
+    const chanceEpico = 5.0;        // 5%
+    const chanceNormal = 30.0;      // 30%
+    
     let mensaje = "";
 
-    // 1. EL LOGRO DEFINITIVO (0.1%) - EL DRAGÓN DEL ENDER-REDENCIÓN
-    if (random <= chanceRedencionEnd) {
-        const rewards = { money: 10000, xp: 50000, items: 30000 };
+    // 1. 🌌 BOTÍN MÍTICO (0.0001%) - DIOS DEL INFIERNO Y EL END
+    if (random <= chanceMitico) {
+        mensaje = `🌌 **¡ALERTA DE EVENTO MÍTICO: EL DESPERTAR DEL REY!** 🌌\n\n`;
+        mensaje += `¡Has encontrado la **Corona de Lucifer** oculta en un bloque de **Bedrock Indestructible**!\n`;
+        mensaje += `El cielo y el infierno se arrodillan ante tu inmenso poder.\n\n`;
+        mensaje += `🎁 **RECOMPENSAS DIVINAS:**\n`;
+        mensaje += `💰 Almas Infinitas: +1,000,000\n`;
+        mensaje += `🧬 Purificación Total (XP): +5,000,000\n`;
+        mensaje += `⭐ Prestigio Ancestral: +2,000,000\n`;
+        mensaje += `💎 Diamantes Eternos: +50,000\n`;
+        mensaje += `🗡️ Arma: [Espada de Alastor - One Hit Kill]\n`;
+        mensaje += `🏰 Propiedad: [Dueño del Hotel y del Overworld]\n\n`;
+        mensaje += `_“¡IT'S SHOWTIME! Has reescrito la historia.”_`;
         
-        mensaje = `✨ **¡LOGRO LEGENDARIO: ADIÓS AL INFIERNO!** ✨\n\n`;
-        mensaje += `Has construido un portal de Netherita pura y derrotaste al **Ender-Dragon de Alastor**.\n`;
-        mensaje += `¡Has pasado el juego y alcanzado la Redención Total!\n\n`;
-        mensaje += `*Botín del Cielo:*\n`;
-        mensaje += `💰 Almas de Diamante: +${rewards.money}\n`;
-        mensaje += `🧬 XP de Angel: +${rewards.xp}\n`;
-        mensaje += `⭐ Fragmentos Estelares: +${rewards.items}\n\n`;
-        mensaje += `_“The show must go on... in Heaven!”_`;
-        
-        // global.db.data.users[m.sender].money += rewards.money;
+        // Efecto visual de estrellas/fuego si tu bot lo soporta
     } 
-    
-    // 2. MINERÍA Y COMBATE EXITOSO (35%)
-    else if (random <= chanceMineriaExitosa) {
-        const eventos = [
-            { act: "picando en las minas de cristal de Husk", loot: "64 Diamantes de Sangre", money: 1200 },
-            { act: "asaltando una Bastión custodiada por Sir Pentious", loot: "Lingotes de Netherita Real", money: 2500 },
-            { act: "cultivando Verrugas del Nether con Charlie", loot: "Pociones de Redención", money: 800 },
-            { act: "intercambiando con Piglins en el estudio de Valentino", loot: "Manzanas de Oro Dopadas", money: 1500 }
+
+    // 2. ✨ BOTÍN LEGENDARIO (0.1%)
+    else if (random <= chanceLegendario) {
+        mensaje = `✨ **¡LOGRO LEGENDARIO!** ✨\n\n`;
+        mensaje += `¡Derrotaste al Dragón del End de Alastor!\n\n`;
+        mensaje += `🎁 **RECOMPENSAS:**\n`;
+        mensaje += `💰 Almas: +10,000\n`;
+        mensaje += `🧬 Experiencia: +50,000\n`;
+        mensaje += `⭐ Prestigio: +30,000\n`;
+        mensaje += `📦 Item: [Huevo de Dragón de la Radio]`;
+    }
+
+    // 3. 🔥 BOTÍN ÉPICO (5%)
+    else if (random <= chanceEpico) {
+        mensaje = `🔥 **¡BOTÍN DE OVERLORD!** 🔥\n\n`;
+        mensaje += `Asaltaste la caja fuerte de Valentino.\n\n`;
+        mensaje += `🎁 **RECOMPENSAS:**\n`;
+        mensaje += `💰 Almas: +5,000\n`;
+        mensaje += `🧬 XP: +15,000\n`;
+        mensaje += `💎 Diamantes: +100\n`;
+        mensaje += `🛡️ Armadura: [Set de Netherita Angelical]`;
+    }
+
+    // 4. ⛏️ ÉXITO NORMAL (30%)
+    else if (random <= chanceNormal) {
+        const opciones = [
+            { lugar: "las minas de Husk", m: 800, x: 2000, i: "64 Esmeraldas" },
+            { lugar: "el jardín de Charlie", m: 500, x: 1500, i: "32 Manzanas de Oro" }
         ];
+        const res = opciones[Math.floor(Math.random() * opciones.length)];
         
-        const res = eventos[Math.floor(Math.random() * eventos.length)];
-        
-        mensaje = `⛏️ **MINECRAFT: HAZBIN EDITION** 😈\n\n`;
-        mensaje += `Te encontraste *${res.act}*.\n`;
-        mensaje += `💵 Ganancia: +${res.money} Almas\n`;
-        mensaje += `📦 Item: ${res.loot}`;
-    } 
-    
-    // 3. MUERTE EN EL MUNDO CUADRADO (FALLO)
+        mensaje = `⛏️ **EXPLORACIÓN EXITOSA**\n\n`;
+        mensaje += `Lugar: *${res.lugar}*\n`;
+        mensaje += `💰 Almas: +${res.m}\n`;
+        mensaje += `📦 Item: ${res.i}`;
+    }
+
+    // 5. 💀 MUERTE
     else {
-        const muertes = [
-            "Un Creeper con la sonrisa de Alastor explotó en tu cara. ¡BOOM!",
-            "Caíste en un pozo de lava mientras Angel Dust te distraía.",
-            "Vaggie te confundió con un Exterminador y te lanzó su lanza de Netherita.",
-            "Intentaste dormir en el Nether del Hotel y la cama explotó.",
-            "Un Enderman te robó el bloque de tierra donde estabas parado."
+        const fallos = [
+            "Un Creeper con la sonrisa de Alastor te mandó al lobby.",
+            "Caíste en lava mientras intentabas ligar con Angel Dust.",
+            "Sir Pentious te disparó con su rayo láser por accidente."
         ];
-        mensaje = `💀 **YOU DIED:** ${muertes[Math.floor(Math.random() * muertes.length)]}`;
+        mensaje = `💀 **YOU DIED**\n\n${fallos[Math.floor(Math.random() * fallos.length)]}`;
     }
 
     await conn.reply(m.chat, mensaje, m);
@@ -61,6 +82,6 @@ const handler = async (m, { conn, command, usedPrefix }) => {
 
 handler.help = ['explorar'];
 handler.tags = ['rpg'];
-handler.command = /^(explorar|mine|mc)$/i; // .explorar, .mine, .mc, #explorar, etc.
+handler.command = /^(explorar|mine|mc)$/i; 
 
 export default handler;
