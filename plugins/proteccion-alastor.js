@@ -1,42 +1,33 @@
-// plugins.js - Módulo de Protección Estilo Alastor
+// plugins/proteccion-alastor.js
 
-const ownerNumber = '5217223004357@s.whatsapp.net'; // Tu ID configurado
+const ownerNumber = '5217223004357@s.whatsapp.net';
 
-const alastorQuotes = [
-  "¡Oh, por favor! ¿Intentas usar eso contra mi creador? ¡Qué falta de modales! 🎙️",
-  "¡Ja, ja, ja! Un esfuerzo valiente, pero me temo que esa frecuencia está bloqueada para ti. 📻",
-  "¡Sintoniza otra emisora, querido! No dejaré que toques ni un pelo de quien me trajo aquí. 🍎",
-  "¿En serio crees que tienes el poder suficiente? ¡Qué entretenimiento tan fascinante! Pero no. 🦌"
-];
+let handler = m => m;
 
-export async function before(m, { conn }) {
-  // Verificamos si el mensaje empieza con tus prefijos (. o #)
-  const isCommand = /^[.#]/.test(m.text);
-  if (!isCommand) return;
+handler.before = async function (m, { conn }) {
+    // Verificamos prefijos . y # según tu configuración
+    if (!m.text || !/^[.#]/.test(m.text)) return false;
 
-  // Identificamos al objetivo (ya sea mencionado o por mensaje citado)
-  const target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null);
+    // Detectamos si el objetivo es el creador
+    const target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null);
 
-  // Si el objetivo es tu ID y quien lo intenta NO eres tú
-  if (target === ownerNumber && m.sender !== ownerNumber) {
-    const quote = alastorQuotes[Math.floor(Math.random() * alastorQuotes.length)];
-    
-    await conn.sendMessage(m.chat, {
-      text: `*¡INTERRUPCIÓN RADIOFÓNICA!* 📻\n\n${quote}\n\n_— El Demonio de la Radio_`,
-      contextInfo: {
-        externalAdReply: {
-          title: "Hazbin Hotel Security System",
-          body: "Protección de Creador Activa",
-          // Puedes poner un link a una imagen de Alastor aquí:
-          thumbnailUrl: "https://path-to-alastor-image.jpg", 
-          showAdAttribution: true,
-          sourceUrl: ""
-        }
-      }
-    }, { quoted: m });
+    if (target === ownerNumber && m.sender !== ownerNumber) {
+        
+        await conn.sendMessage(m.chat, {
+            text: `*¡EL SHOW HA TERMINADO PARA TI!* 🎙️\n\n@${m.sender.split('@')[0]}, tu contrato ha sido revocado. Intentar atacar a mi creador es un pecado que no puedo ignorar. ¡Disfruta de la estática! 📻✨`,
+            mentions: [m.sender]
+        }, { quoted: m });
 
-    return false; // Bloquea la ejecución del comando original
-  }
+        return true; // Bloquea la ejecución del comando enemigo
+    }
 
-  return true;
-}
+    return false;
+};
+
+// Configuración final estilo plugin estándar
+handler.help = ['proteccion']
+handler.tags = ['owner']
+handler.command = /^(proteccionalastor)$/i // Comando interno por si quieres consultar algo
+handler.group = true
+
+export default handler
