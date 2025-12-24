@@ -58,7 +58,7 @@ const handler = async (m, { conn, usedPrefix }) => {
 
 handler.help = ['explorar']
 handler.tags = ['rpg']
-handler.command = /^(explorar|mine|mc)$/i 
+handler.command = ['explorar', 'mine', 'mc']
 
 export default handler
 
