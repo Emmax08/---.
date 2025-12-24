@@ -1,4 +1,4 @@
-import { googleImage } from '@bochilteam/scraper'
+import { youtubeSearch } from '@bochilteam/scraper'
 import yts from 'yt-search'
 import fetch from 'node-fetch'
 
@@ -8,7 +8,6 @@ const newsletterName = '⏤͟͞ू⃪፝͜⁞⟡ 𝐀𝐋𝐀𝐒𝐓𝐎𝐑\'s
 var handler = async (m, { conn, text, usedPrefix, command }) => {
     const name = conn.getName(m.sender)
     
-    // Si no hay texto o link, Alastor pide sintonía
     if (!text) throw `🎙️ *¡Falta la señal visual, Proxy ${name}!* Necesito un nombre o un enlace de YouTube.\n\n_Ejemplo: ${usedPrefix + command} Stayed Gone Video_`
 
     const contextInfo = {
@@ -25,30 +24,28 @@ var handler = async (m, { conn, text, usedPrefix, command }) => {
     }
 
     try {
-        await m.reply(`🔄 *Ajustando el proyector...* Buscando en las sombras la mejor calidad para ti, Proxy. ✨`)
+        await m.reply(`🔄 *Ajustando el proyector...* Buscando la frecuencia visual para ti, Proxy. ✨`)
 
-        // Buscamos el video (acepta link o nombre)
+        // Busca por nombre o link
         const search = await yts(text)
         const video = search.all[0]
-        if (!video) throw '¡Oh, qué tragedia! No encontré ninguna transmisión con ese nombre.'
+        if (!video) throw '¡Oh, qué tragedia! No encontré ninguna transmisión.'
 
         const { title, thumbnail, timestamp, views, url } = video
 
-        // Intentamos con una API de alta disponibilidad
+        // Servidor de respaldo 1
         const res = await fetch(`https://api.lolhuman.xyz/api/ytvideo2?apikey=${global.lolkeysapi || 'GataDios'}&url=${url}`)
         const json = await res.json()
 
         if (!json.result || !json.result.link) {
-            // Fallback si la API principal falla
             throw new Error('Estática en la señal')
         }
 
         const downloadUrl = json.result.link
         const size = json.result.size || 'Desconocido'
 
-        const caption = `╭━━━━[ 𝚈𝚃𝙼𝙿𝟺: 𝚅𝚒𝚜𝚒𝚘́𝚗 𝚂𝚎𝚐𝚞𝚛𝚊 ]━━━━⬣\n📌 *Título:* ${title}\n⏱️ *Duración:* ${timestamp}\n📂 *Peso:* ${size}\n👁️ *Vistas:* ${views.toLocaleString()}\n╰━━━━━━━━━━━━━━━━━━━━━━━━━━⬣\n\n_Disfruta del entretenimiento... ¡Es un show único!_ 🎙️✨`
+        const caption = `╭━━━━[ 𝚈𝚃𝙼𝙿𝟺: 𝚅𝚒𝚜𝚒𝚘́𝚗 𝚂𝚎𝚐𝚞𝚛𝚊 ]━━━━⬣\n📌 *Título:* ${title}\n⏱️ *Duración:* ${timestamp}\n📂 *Peso:* ${size}\n👁️ *Vistas:* ${views.toLocaleString()}\n╰━━━━━━━━━━━━━━━━━━━━━━━━━━⬣\n\n_Disfruta del show... ¡La imagen es impecable!_ 🎙️✨`
 
-        // Enviamos el video
         await conn.sendMessage(m.chat, { 
             video: { url: downloadUrl }, 
             caption: caption,
@@ -60,15 +57,14 @@ var handler = async (m, { conn, text, usedPrefix, command }) => {
 
     } catch (e) {
         console.error(e)
-        // Si todo falla, Alastor da un mensaje de error con su estilo
         await m.react("❌")
-        await conn.reply(m.chat, `⚠️ *Anomalía detectada, Proxy ${name}.*\n\nLas sombras están demasiado densas hoy. El enlace se ha perdido en la estática. ¡Intenta con otro título o link! 📻`, m, { contextInfo })
+        await conn.reply(m.chat, `⚠️ *Anomalía detectada, Proxy ${name}.*\n\nLa transmisión se perdió en la estática. ¡Intenta con otro título! 📻`, m, { contextInfo })
     }
 }
 
 handler.help = ['ytmp4 <nombre/link>']
 handler.tags = ['descargas']
-handler.command = /^(ytmp4|video|v)$/i
+handler.command = /^(ytmp4|video|v)$/i // Esto asegura que responda a .ytmp4, .video o .v
 handler.register = true
 
 export default handler
