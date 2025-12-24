@@ -12,7 +12,12 @@ var handler = async (m, { conn, participants, usedPrefix, command }) => {
 
     const groupInfo = await conn.groupMetadata(m.chat);
     const ownerGroup = groupInfo.owner || m.chat.split`-`[0] + '@s.whatsapp.net';
-    const ownerBot = global.owner[0][0] + '@s.whatsapp.net';
+    
+    // --- NUEVA LÓGICA DE PROTECCIÓN GLOBAL ---
+    // Extraemos todos los números de global.owner y les damos formato de JID
+    const globalOwners = global.owner
+        .filter(owner => owner[0]) // Filtramos entradas vacías
+        .map(owner => owner[0] + '@s.whatsapp.net');
 
     // Restricciones con el toque de Alastor
     if (user === conn.user.jid) {
@@ -23,9 +28,11 @@ var handler = async (m, { conn, participants, usedPrefix, command }) => {
         return conn.reply(m.chat, `🍎 No puedo expulsar al dueño de este hotel... todavía. Las reglas de cortesía me lo impiden.`, m);
     }
 
-    if (user === ownerBot) {
-        return conn.reply(m.chat, `🎙️ Mi creador es quien me da la señal. Sería una tontería morder la mano que sostiene el micrófono, ¿no crees?`, m);
+    // Verificamos si el usuario está en la lista de dueños globales
+    if (globalOwners.includes(user)) {
+        return conn.reply(m.chat, `🎙️ Mis creadores son quienes me dan la señal. Sería una tontería morder una de las manos que sostienen el micrófono, ¿no crees?`, m);
     }
+    // ------------------------------------------
 
     // Ejecución del "despido"
     await conn.sendMessage(m.chat, { 
