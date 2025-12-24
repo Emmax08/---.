@@ -56,7 +56,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
 
 handler.help = ['qr', 'code']
 handler.tags = ['serbot']
-handler.command = /^(qr|code)$/i // Recordando tus prefijos . y #
+handler.command = ['qr', 'code']
 export default handler
 
 export async function MariaJadiBot(options) {
