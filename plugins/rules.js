@@ -30,6 +30,6 @@ let handler = async (m, { conn, usedPrefix }) => {
 handler.help = ['rules', 'reglas']
 handler.tags = ['main']
 // El comando responde a .reglas, .rules, #reglas o #rules
-handler.command = /^(rules|reglas)$/i
+handler.command = ['reglas']
 
 export default handler
