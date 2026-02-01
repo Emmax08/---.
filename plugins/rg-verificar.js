@@ -1,5 +1,5 @@
-import db from '../lib/database.js'
 import fs from 'fs'
+import path from 'path'
 import PhoneNumber from 'awesome-phonenumber'
 import { createHash } from 'crypto'  
 import fetch from 'node-fetch'
@@ -7,61 +7,93 @@ import fetch from 'node-fetch'
 let Reg = /^(.+)[.|]\s*([0-9]+)$/i
 
 let handler = async function (m, { conn, text, usedPrefix, command }) {
-  let user = global.db.data.users[m.sender]
-  let name2 = (await conn.getName(m.sender)) || 'IsagiDelantero'
-  let channel = 'https://whatsapp.com/channel/0029Vb73g1r1NCrTbefbFQ2T'
-  let isagiImg = 'https://files.catbox.moe/l8qiik.jpeg'
+  console.log('🎙️ [DEBUG] Iniciando comando de registro...')
+  
+  // Ruta manual al archivo JSON
+  const dbPath = path.join(process.cwd(), 'src/database/db.json')
+  console.log('🎙️ [DEBUG] Ruta del archivo:', dbPath)
 
-  if (user.registered === true) return m.reply(
-    `🌟 *¡Ya estás registrado en el campo de Isagi Yoichi!* 🌟\n\n⚽️ Si quieres eliminar tu registro, usa:\n*${usedPrefix}unreg*`
-  )
+  let db;
+  try {
+    const rawData = fs.readFileSync(dbPath, 'utf-8')
+    db = JSON.parse(rawData)
+    console.log('🎙️ [DEBUG] Base de datos cargada correctamente.')
+  } catch (err) {
+    console.log('❌ [ERROR] No se pudo leer el JSON:', err.message)
+    return m.reply('¡Vaya! Parece que mi libro de almas está perdido. Revisa la consola.')
+  }
 
-  if (!Reg.test(text)) return m.reply(
-    `🏆 *Registro Isagi* 🏆\n\n*Formato correcto:*\n${usedPrefix + command} nombre.edad\n\n*Ejemplo:*\n${usedPrefix + command} ${name2}.18\n\n¡Haz tu registro para recibir tu tarjeta !`
-  )
+  // Aseguramos estructura (Sin usar global.db para evitar conflictos)
+  if (!db.users) db.users = {}
+  if (!db.users[m.sender]) db.users[m.sender] = {}
+  
+  let user = db.users[m.sender]
+  let name2 = (await conn.getName(m.sender)) || 'Pecador'
+  let alastorImg = 'https://raw.githubusercontent.com/danielalejandrobasado-glitch/Yotsuba-MD-Premium/main/uploads/e80e10ee231c3732.jpg'
+
+  console.log(`🎙️ [DEBUG] Usuario: ${m.sender} | Registrado: ${user.registered}`)
+
+  if (user.registered === true) {
+    console.log('🎙️ [DEBUG] El usuario ya estaba registrado.')
+    return m.reply(`🎙️ *¡Ya eres parte del espectáculo!* Usa *${usedPrefix}unreg* para irte.`)
+  }
+
+  if (!Reg.test(text)) {
+    console.log('🎙️ [DEBUG] Texto no cumple el formato:', text)
+    return m.reply(`📻 *Formato incorrecto*\nUsa: ${usedPrefix + command} nombre.edad`)
+  }
 
   let [_, name, age] = text.match(Reg)
-  if (!name) return m.reply('🏆 El nombre no puede estar vacío. Intenta de nuevo.')
-  if (!age) return m.reply('🏆 La edad no puede estar vacía. Intenta de nuevo.')
-  if (name.length >= 30) return m.reply('🏆 El nombre es muy largo. Usa menos de 30 caracteres.')
   age = parseInt(age)
-  if (age > 100) return m.reply('🏆 ¡Esa edad es demasiado alta! Usa una edad real.')
-  if (age < 10) return m.reply('🏆 ¡Eres muy pequeño para usar el bot!')
 
-  user.name = name.trim() + ' ✨'
+  console.log(`🎙️ [DEBUG] Datos extraídos -> Nombre: ${name}, Edad: ${age}`)
+
+  // Validaciones
+  if (!name || name.length >= 30) return m.reply('🍷 Nombre muy largo o vacío.')
+  if (isNaN(age) || age > 100 || age < 10) return m.reply('🍷 Edad no válida.')
+
+  // Guardando en el objeto local
+  user.name = name.trim() + ' 🎙️'
   user.age = age
   user.regTime = +new Date
   user.registered = true
-  user.coin = (user.coin || 0) + 39
-  user.exp = (user.exp || 0) + 300
+  user.coin = (user.coin || 0) + 66
+  user.exp = (user.exp || 0) + 666
   user.joincount = (user.joincount || 0) + 20
 
-  let sn = createHash('md5').update(m.sender).digest('hex').slice(0, 20)
-
-  let regbot = `🌟 *¡REGISTRO EXITOSO!* 🌟\n\n👤 *Nombre:* ${name}\n🎂 *Edad:* ${age} años\n🆔 *ID:* ${sn}\n\n⚽️ *¡Bienvenido/a al campo de Isagi Yoichi!* ⚽️\n\n🎁 *Recompensas iniciales:*\n💰 +39 monedas\n✨ +300 XP\n🎟️ +20 tickets`
-
-  await m.react('⚽️')
-
-  let thumbBuffer = null
   try {
-    const res = await fetch(isagiImg)
-    thumbBuffer = Buffer.from(await res.arrayBuffer())
-  } catch (e) {
-    console.log('Error descargando imagen:', e)
+    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2))
+    console.log('🎙️ [DEBUG] Archivo db.json actualizado con éxito.')
+  } catch (writeErr) {
+    console.log('❌ [ERROR] Falló la escritura:', writeErr.message)
   }
 
-  await conn.sendMessage(m.chat, {
-    text: regbot,
-    contextInfo: {
-      externalAdReply: {
-        title: '🏆 Registro en Isagi Yoichi Bot 🏆',
-        body: '¡Tu tarjeta está lista! 🔥',
-        thumbnail: thumbBuffer,
-        mediaType: 1,
-        renderLargerThumbnail: true
+  let sn = createHash('md5').update(m.sender).digest('hex').slice(0, 20)
+  let regbot = `🎙️ *¡CONTRATO SELLADO!* 🎙️\n\n👤 *Nombre:* ${name}\n🎂 *Edad:* ${age} años\n🆔 *ID:* ${sn}\n\n📻 *¡Bienvenido al Hazbin Hotel!*`
+
+  await m.react('🎙️')
+
+  try {
+    const res = await fetch(alastorImg)
+    const thumbBuffer = Buffer.from(await res.arrayBuffer())
+    console.log('🎙️ [DEBUG] Imagen descargada, enviando mensaje final...')
+
+    await conn.sendMessage(m.chat, {
+      text: regbot,
+      contextInfo: {
+        externalAdReply: {
+          title: '📻 Registro Oficial de Alastor 📻',
+          body: '¡Tu alma ahora nos pertenece! 🔥',
+          thumbnail: thumbBuffer,
+          mediaType: 1,
+          renderLargerThumbnail: true
+        }
       }
-    }
-  }, { quoted: m })
+    }, { quoted: m })
+  } catch (e) {
+    console.log('❌ [ERROR] Falló el envío del mensaje con imagen:', e.message)
+    m.reply(regbot) // Enviar solo texto si la imagen falla
+  }
 }
 
 handler.help = ['reg']
