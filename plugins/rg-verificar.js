@@ -4,8 +4,7 @@ let Reg = /\|?(.*)([.|] *?)([0-9]*)$/i
 
 let handler = async function (m, { conn, text }) {
   let user = global.db.data.users[m.sender]
-  let name2 = conn.getName(m.sender)
-
+  
   if (user.registered === true) throw `*『✦』Ya estás registrado. Para volver a registrarte usa: #unreg*`
   if (!Reg.test(text)) throw `*『✦』Formato incorrecto.*\nUsa:\n#reg Nombre.edad\n\nEjemplo:\n#reg 𝐀𝐋𝐀𝐒𝐓𝐎𝐑.18`
 
@@ -15,18 +14,28 @@ let handler = async function (m, { conn, text }) {
   if (name.length >= 30) throw '*『✦』El nombre no debe superar 30 caracteres.*'
 
   age = parseInt(age)
-  if (age > 100) throw '*『😏』Viejo/a sabroso/a*'
-  if (age < 5) throw '*『🍼』Ven aquí, te adoptare!!*'
+  if (age > 100) throw '*『😏』¿Tan viejo/a? ¡Eres un fósil viviente!*'
+  if (age < 5) throw '*『🍼』Ven aquí, ¡te voy a adoptar, pequeño/a!*'
 
-  // Guardar en DB
+  // --- Sincronización de Recompensas ---
+  const recompensas = {
+    money: 5,
+    estrellas: 15,
+    exp: 245,
+    joincount: 12
+  }
+
+  // Guardar en Base de Datos
   user.name = name.trim()
   user.age = age
-  user.regTime = + new Date
+  user.regTime = + new Date()
   user.registered = true
-  global.db.data.users[m.sender].money += 600
-  global.db.data.users[m.sender].estrellas += 10
-  global.db.data.users[m.sender].exp += 245
-  global.db.data.users[m.sender].joincount += 5
+  
+  // Aplicar recompensas
+  user.money += recompensas.money
+  user.estrellas += recompensas.estrellas
+  user.exp += recompensas.exp
+  user.joincount += recompensas.joincount
 
   let sn = createHash('md5').update(m.sender).digest('hex').slice(0, 6)
   m.react('📩')
@@ -37,12 +46,13 @@ let handler = async function (m, { conn, text }) {
 「✨️」𝗘𝗱𝗮𝗱: ${age} años
 •┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄•
 「🎁」𝗥𝗲𝗰𝗼𝗺𝗽𝗲𝗻𝘀𝗮𝘀:
-• 15 Estrellas 🌟
-• 5 monedas 🪙
-• 245 Exp 💸
-• 12 Tokens 💰
+• ${recompensas.estrellas} Estrellas 🌟
+• ${recompensas.money} Monedas 🪙
+• ${recompensas.exp} Exp 💸
+• ${recompensas.joincount} Tokens 💰
 •┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄•
-${global.packname || ''}`
+Serial: ${sn}
+${global.packname || '𝐀𝐋𝐀𝐒𝐓𝐎𝐑 Bot'}`
 
   const imagenRegistro = 'https://files.catbox.moe/qc75v7.jpg'
 
@@ -51,9 +61,9 @@ ${global.packname || ''}`
     contextInfo: {
       externalAdReply: {
         title: '𝐀𝐋𝐀𝐒𝐓𝐎𝐑 Bot',
-        body: 'Registro exitoso',
-        thumbnailUrl: imagenRegistro,
-        sourceUrl: global.redes || 'https://github.com/Dioneibi-rip',
+        body: '¡Registro completado con éxito!',
+        thumbnailUrl: icons,
+        sourceUrl: redes,
         mediaType: 1,
         renderLargerThumbnail: true
       }
