@@ -1,99 +1,83 @@
-import fs from 'fs'
-import path from 'path'
-import PhoneNumber from 'awesome-phonenumber'
-import { createHash } from 'crypto'  
+import { createHash } from 'crypto'
 import fetch from 'node-fetch'
+import { readFileSync } from 'fs'
 
-let Reg = /^(.+)[.|]\s*([0-9]+)$/i
+// Leer base de datos de enlaces
+const dbLinks = JSON.parse(readFileSync('./src/database/db.json'))
 
-let handler = async function (m, { conn, text, usedPrefix, command }) {
-  console.log('🎙️ [DEBUG] Iniciando comando de registro...')
+let Reg = /\|?(.*)([.|] *?)([0-9]*)$/i
+
+let handler = async function (m, { conn, text }) {
+  let user = global.db.data.users[m.sender]
   
-  // Ruta manual al archivo JSON
-  const dbPath = path.join(process.cwd(), 'src/database/db.json')
-  console.log('🎙️ [DEBUG] Ruta del archivo:', dbPath)
+  if (user.registered === true) throw `*『✦』Ya estás registrado. Para volver a registrarte usa: #unreg*`
+  if (!Reg.test(text)) throw `*『✦』Formato incorrecto.*\nUsa:\n#reg Nombre.edad\n\nEjemplo:\n#reg Masha.18`
 
-  let db;
-  try {
-    const rawData = fs.readFileSync(dbPath, 'utf-8')
-    db = JSON.parse(rawData)
-    console.log('🎙️ [DEBUG] Base de datos cargada correctamente.')
-  } catch (err) {
-    console.log('❌ [ERROR] No se pudo leer el JSON:', err.message)
-    return m.reply('¡Vaya! Parece que mi libro de almas está perdido. Revisa la consola.')
-  }
+  let [_, name, splitter, age] = text.match(Reg)
+  if (!name) throw '*『✦』El nombre es obligatorio.*'
+  if (!age) throw '*『✦』La edad es obligatoria.*'
+  if (name.length >= 30) throw '*『✦』El nombre no debe superar 30 caracteres.*'
 
-  // Aseguramos estructura (Sin usar global.db para evitar conflictos)
-  if (!db.users) db.users = {}
-  if (!db.users[m.sender]) db.users[m.sender] = {}
-  
-  let user = db.users[m.sender]
-  let name2 = (await conn.getName(m.sender)) || 'Pecador'
-  let alastorImg = 'https://raw.githubusercontent.com/danielalejandrobasado-glitch/Yotsuba-MD-Premium/main/uploads/e80e10ee231c3732.jpg'
-
-  console.log(`🎙️ [DEBUG] Usuario: ${m.sender} | Registrado: ${user.registered}`)
-
-  if (user.registered === true) {
-    console.log('🎙️ [DEBUG] El usuario ya estaba registrado.')
-    return m.reply(`🎙️ *¡Ya eres parte del espectáculo!* Usa *${usedPrefix}unreg* para irte.`)
-  }
-
-  if (!Reg.test(text)) {
-    console.log('🎙️ [DEBUG] Texto no cumple el formato:', text)
-    return m.reply(`📻 *Formato incorrecto*\nUsa: ${usedPrefix + command} nombre.edad`)
-  }
-
-  let [_, name, age] = text.match(Reg)
   age = parseInt(age)
+  if (age > 100) throw '*『😏』Viejo/a sabroso/a*'
+  if (age < 5) throw '*『🍼』Ven aquí, te adoptare!!*'
 
-  console.log(`🎙️ [DEBUG] Datos extraídos -> Nombre: ${name}, Edad: ${age}`)
-
-  // Validaciones
-  if (!name || name.length >= 30) return m.reply('🍷 Nombre muy largo o vacío.')
-  if (isNaN(age) || age > 100 || age < 10) return m.reply('🍷 Edad no válida.')
-
-  // Guardando en el objeto local
-  user.name = name.trim() + ' 🎙️'
+  // Guardar en DB
+  user.name = name.trim()
   user.age = age
-  user.regTime = +new Date
+  user.regTime = + new Date()
   user.registered = true
-  user.coin = (user.coin || 0) + 66
-  user.exp = (user.exp || 0) + 666
-  user.joincount = (user.joincount || 0) + 20
+  
+  // Recompensas
+  user.money += 600
+  user.estrellas += 10
+  user.exp += 245
+  user.joincount += 5
 
+  let sn = createHash('md5').update(m.sender).digest('hex').slice(0, 6)
+  
+  // Lógica de Imagen (Prioridad: Perfil > JSON aleatorio)
+  let imgPerfil
   try {
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2))
-    console.log('🎙️ [DEBUG] Archivo db.json actualizado con éxito.')
-  } catch (writeErr) {
-    console.log('❌ [ERROR] Falló la escritura:', writeErr.message)
-  }
-
-  let sn = createHash('md5').update(m.sender).digest('hex').slice(0, 20)
-  let regbot = `🎙️ *¡CONTRATO SELLADO!* 🎙️\n\n👤 *Nombre:* ${name}\n🎂 *Edad:* ${age} años\n🆔 *ID:* ${sn}\n\n📻 *¡Bienvenido al Hazbin Hotel!*`
-
-  await m.react('🎙️')
-
-  try {
-    const res = await fetch(alastorImg)
-    const thumbBuffer = Buffer.from(await res.arrayBuffer())
-    console.log('🎙️ [DEBUG] Imagen descargada, enviando mensaje final...')
-
-    await conn.sendMessage(m.chat, {
-      text: regbot,
-      contextInfo: {
-        externalAdReply: {
-          title: '📻 Registro Oficial de Alastor 📻',
-          body: '¡Tu alma ahora nos pertenece! 🔥',
-          thumbnail: thumbBuffer,
-          mediaType: 1,
-          renderLargerThumbnail: true
-        }
-      }
-    }, { quoted: m })
+    imgPerfil = await conn.profilePictureUrl(m.sender, 'image')
   } catch (e) {
-    console.log('❌ [ERROR] Falló el envío del mensaje con imagen:', e.message)
-    m.reply(regbot) // Enviar solo texto si la imagen falla
+    // Si falla, elige una imagen aleatoria de tu db.json
+    const imagenes = dbLinks.links.imagen
+    imgPerfil = imagenes[Math.floor(Math.random() * imagenes.length)]
   }
+
+  // Descargar imagen con node-fetch para validar
+  let response = await fetch(imgPerfil)
+  let buffer = await response.buffer()
+
+  m.react('📩')
+
+  let regbot = `👤 𝗥 𝗘 𝗚 𝗜 𝗦 𝗧 𝗥 𝗢 👤
+•┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄•
+「💭」𝗡𝗼𝗺𝗯𝗿𝗲: ${name}
+「✨️」𝗘𝗱𝗮𝗱: ${age} años
+•┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄•
+「🎁」𝗥𝗲𝗰𝗼𝗺𝗽𝗲𝗻𝘀𝗮𝘀:
+• 10 Estrellas 🌟
+• 600 Monedas 🪙
+• 245 Exp 💸
+• 5 Tokens 💰
+•┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄•
+${global.packname || 'Maria Kujou Bot'}`
+
+  await conn.sendMessage(m.chat, {
+    text: '⊱『✅ 𝗥𝗘𝗚𝗜𝗦𝗧𝗥𝗔𝗗𝗢(𝗔) ✅』⊰\n\n' + regbot,
+    contextInfo: {
+      externalAdReply: {
+        title: '𝗠𝗔𝗥𝗜𝗔 𝗞𝗨𝗝𝗢𝗨 𝗕𝗢𝗧',
+        body: 'Registro exitoso',
+        thumbnail: buffer,
+        sourceUrl: global.redes || 'https://github.com/Dioneibi-rip',
+        mediaType: 1,
+        renderLargerThumbnail: true
+      }
+    }
+  }, { quoted: m })
 }
 
 handler.help = ['reg']
