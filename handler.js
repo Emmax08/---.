@@ -22,28 +22,34 @@ const cleanJid = jid => jid?.split(':')[0] || ''
 
 // Definición global y centralizada de la función de error.
 global.dfail = (type, m, conn) => {
+    // Llama al manejador de errores externo.
+    // La variable 'global.comando' se asigna más abajo antes de que se llame a fail().
     failureHandler(type, conn, m, global.comando);
 };
 
 export async function handler(chatUpdate) {
     this.msgqueque = this.msgqueque || []
-    this.uptime = this.uptime || Date.now()
-    if (!chatUpdate) return
+this.uptime = this.uptime || Date.now()
+if (!chatUpdate) return
 
-    this.pushMessage(chatUpdate.messages).catch(console.error)
-    let m = chatUpdate.messages[chatUpdate.messages.length - 1]
-    if (!m) return
+this.pushMessage(chatUpdate.messages).catch(console.error)
+let m = chatUpdate.messages[chatUpdate.messages.length - 1]
+if (!m) return
 
-    // Manejo de botones con archivo externo
-    if (await manejarRespuestasBotones(this, m)) return;
-    // Manejo de stickers con archivo externo
-    if (await manejarRespuestasStickers(this, m)) return;
+// Manejo de botones con archivo externo
+if (await manejarRespuestasBotones(this, m)) return;
+// Manejo de stickers con archivo externo
+if (await manejarRespuestasStickers(this, m)) return;
 
-    // --- NOTA: La lógica aleatoria antigua se eliminó aquí para moverla después de cargar la DB ---
+    if (m.isGroup && global.conns && global.conns.length > 1) {
+        let botsEnGrupo = global.conns.filter(c => c.user && c.user.jid && c.ws && c.ws.socket && c.ws.socket.readyState !== 3)
+        let elegido = botsEnGrupo[Math.floor(Math.random() * botsEnGrupo.length)]
+        if (this.user.jid !== elegido.user.jid) return
+    }
 
     if (global.db.data == null)
-        await global.loadDatabase()
-    
+        await global.loadDatabase()       
+
     let sender;
     try {
         m = smsg(this, m) || m
@@ -134,11 +140,9 @@ export async function handler(chatUpdate) {
                 if (!isNumber(chat.expired)) chat.expired = 0
                 if (!('antiLag' in chat)) chat.antiLag = false
                 if (!('per' in chat)) chat.per = []
-                // Inicializamos primaryBot si no existe
-                if (!('primaryBot' in chat)) chat.primaryBot = false 
             } else
                 global.db.data.chats[m.chat] = {
-                    sAutoresponder: '', welcome: true, isBanned: false, autolevelup: false, autoresponder: false, delete: false, autoAceptar: false, autoRechazar: false, detect: true, antiBot: false, antiBot2: false, modoadmin: false, antiLink: true, antifake: false, reaction: false, nsfw: false, expired: 0, antiLag: false, per: [], primaryBot: false
+                    sAutoresponder: '', welcome: true, isBanned: false, autolevelup: false, autoresponder: false, delete: false, autoAceptar: false, autoRechazar: false, detect: true, antiBot: false, antiBot2: false, modoadmin: false, antiLink: true, antifake: false, reaction: false, nsfw: false, expired: 0, antiLag: false, per: [],
                 }
             var settings = global.db.data.settings[this.user.jid]
             if (typeof settings !== 'object') global.db.data.settings[this.user.jid] = {}
@@ -170,10 +174,10 @@ export async function handler(chatUpdate) {
         const _user = global.db.data.users[sender]
         const groupMetadata = m.isGroup ? { ...(this.chats[m.chat]?.metadata || await this.groupMetadata(m.chat).catch(_ => null) || {}), ...(((this.chats[m.chat]?.metadata || await this.groupMetadata(m.chat).catch(_ => null) || {}).participants) && { participants: ((this.chats[m.chat]?.metadata || await this.groupMetadata(m.chat).catch(_ => null) || {}).participants || []).map(p => ({ ...p, id: p.jid, jid: p.jid, lid: p.lid })) }) } : {}
         const participants = ((m.isGroup ? groupMetadata.participants : []) || []).map(participant => ({ id: participant.jid, jid: participant.jid, lid: participant.lid, admin: participant.admin }))
-        
+
         const user = (m.isGroup ? participants.find((u) => this.decodeJid(u.jid) === sender) : {}) || {}
         const bot = (m.isGroup ? participants.find((u) => this.decodeJid(u.jid) == this.user.jid) : {}) || {}
-        
+
         const isRAdmin = user?.admin == "superadmin" || false
         const isAdmin = isRAdmin || user?.admin == "admin" || false
         const isBotAdmin = bot?.admin || false
@@ -185,46 +189,6 @@ export async function handler(chatUpdate) {
         const isMods = isOwner || global.mods.map(v => v.replace(/[^0-9]/g, '')).includes(senderNum)
         const isPrems = isROwner || global.prems.map(v => v.replace(/[^0-9]/g, '')).includes(senderNum) || _user.premium == true
 
-        // -------------------------------------------------------------------------
-        //  [ SISTEMA DE CONTROL DE MULTIBOTS Y PRIMARY BOT ]
-        // -------------------------------------------------------------------------
-
-        // 1. Verificar si hay un "Primary Bot" asignado en este chat.
-        // Si existe primaryBot y NO es este bot (this.user.jid), cancelamos la ejecución.
-        if (m.isGroup && chat.primaryBot) {
-            if (chat.primaryBot !== this.user.jid) {
-                return 
-            }
-        } 
-        
-        // 2. Si NO hay primaryBot asignado, usamos lógica aleatoria para evitar que todos los subbots respondan a la vez.
-        // Solo si hay más de una conexión activa.
-        else if (m.isGroup && global.conns && global.conns.length > 1) {
-             const botsActivos = global.conns.filter(c => c.user && c.user.jid && c.ws && c.ws.socket && c.ws.socket.readyState !== 3);
-             // Elegimos uno al azar de los disponibles
-             if (botsActivos.length > 0) {
-                 const elegido = botsActivos[Math.floor(Math.random() * botsActivos.length)];
-                 // Si este bot NO es el elegido al azar, se calla.
-                 if (this.user.jid !== elegido.user.jid) return;
-             }
-        }
-        
-        // -------------------------------------------------------------------------
-        //  [ FIN SISTEMA MULTIBOTS ]
-        // -------------------------------------------------------------------------
-
-// --- [ SISTEMA DE BLOQUEO JERÁRQUICO ] ---
-        
-        // 1. NIVEL GLOBAL: bot.globalapagado (Solo Owners)
-        if (global.db.data.settings[this.user.jid]?.globalapagado && !isOwner && !isROwner) {
-            return 
-        }
-
-        // 2. NIVEL OWNER LOCAL: chat.isBotLocked (Solo Owners)
-        if (m.isGroup && chat.isBotLocked && !isOwner && !isROwner) {
-            return
-        }
-        
         if (opts['queque'] && m.text && !(isMods || isPrems)) {
             let queque = this.msgqueque, time = 1000 * 5
             const previousID = queque[queque.length - 1]
@@ -310,12 +274,9 @@ export async function handler(chatUpdate) {
                         if (name != 'owner-unbanuser.js' && user?.banned) return
                     }
                 }
-                let hl = _prefix
-                let solocreador = global.db.data.chats[m.chat].solocreador
+                let hl = _prefix 
                 let adminMode = global.db.data.chats[m.chat].modoadmin
                 let mini = `${plugins.botAdmin || plugins.admin || plugins.group || plugins || noPrefix || hl || m.text.slice(0, 1) == hl || plugins.command}`
-                
-                if (solocreador && !isOwner && !isROwner && mini) return
                 if (adminMode && !isOwner && !isROwner && m.isGroup && !isAdmin && mini) return   
                 if (plugin.rowner && plugin.owner && !(isROwner || isOwner)) { fail('owner', m, this); continue }
                 if (plugin.rowner && !isROwner) { fail('rowner', m, this); continue }
