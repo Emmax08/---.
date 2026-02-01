@@ -52,7 +52,7 @@ handler.all = async function (m) {
   global.namegrupo = '*Ellen-Joe-BOT-OFICIAL*'
   global.namecomu = '*Ellen-Joe-BOT-COMMUNITY*'
   global.listo = '🦈 *Aquí tienes ฅ^•ﻌ•^ฅ*'
-  global.fotoperfil = await conn.profilePictureUrl(m.sender, 'image').catch(_ => 'https://files.catbox.moe/xr2m6u.jpg')
+  global.fotoperfil = await conn.profilePictureUrl(m.sender, 'image').catch(_ => 'https://raw.githubusercontent.com/danielalejandrobasado-glitch/Yotsuba-MD-Premium/main/uploads/e80e10ee231c3732.jpg')
 
   // Ids channel
   global.canalIdM = ["120363418071540900@newsletter", "120363418071540900@newsletter"]
