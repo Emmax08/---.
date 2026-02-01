@@ -72,7 +72,7 @@ ${global.packname || 'Maria Kujou Bot'}`
         title: '𝗠𝗔𝗥𝗜𝗔 𝗞𝗨𝗝𝗢𝗨 𝗕𝗢𝗧',
         body: 'Registro exitoso',
         thumbnail: buffer,
-        sourceUrl: global.redes || 'https://github.com/Dioneibi-rip',
+        sourceUrl: redes,
         mediaType: 1,
         renderLargerThumbnail: true
       }
