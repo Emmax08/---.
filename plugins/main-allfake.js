@@ -31,7 +31,23 @@ global.getBuffer = async function getBuffer(url, options) {
 
 // Lista de iconos
 const iconUrls =[
-'https://raw.githubusercontent.com/nevi-dev/nevi-dev/main/src/does-alastor-actually-care-about-charlie-v0-cwggap82n7sf1.jpeg'
+"https://files.catbox.moe/hhxvc3.jpg",
+"https://files.catbox.moe/d5g0wi.jpg",
+"https://files.catbox.moe/dv8a48.jpg",
+"https://files.catbox.moe/p5f97f.jpg",
+"https://files.catbox.moe/q0h4hf.jpg",
+"https://files.catbox.moe/d5wwg1.jpg",
+"https://files.catbox.moe/j1iciu.jpg",
+"https://files.catbox.moe/p9m8t6.jpg",
+"https://files.catbox.moe/f6jwla.jpg",
+"https://files.catbox.moe/soh4pi.jpg",
+"https://files.catbox.moe/4pbibz.jpg",
+"https://files.catbox.moe/pfed5u.jpg",
+"https://files.catbox.moe/yx3d69.jpg",
+"https://files.catbox.moe/huhh3c.jpg",
+"https://files.catbox.moe/3lhlyw.jpg",
+"https://files.catbox.moe/mxim02.jpg",
+"https://files.catbox.moe/l3yggp.jpg"
 ]
 
 // Función para elegir y descargar un icono aleatorio
